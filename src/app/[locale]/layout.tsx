@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getDictionary, locales, type Locale } from "@/lib/i18n";
+import { getDictionary, locales } from "@/lib/i18n";
 import Link from "next/link";
 import { LanguageToggle } from "./ui/LanguageToggle";
 
@@ -7,17 +7,13 @@ export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-type Props = {
-  children: React.ReactNode;
-  params: { locale: Locale };
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const dict = await getDictionary(params.locale);
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const dict = await getDictionary(locale);
   return {
-    title: `${dict.brand} | ${params.locale === "id" ? "Beranda" : "Home"}`,
+    title: `${dict.brand} | ${locale === "id" ? "Beranda" : "Home"}`,
     description:
-      params.locale === "id"
+      locale === "id"
         ? "Perusahaan teknologi berbasis Indonesia."
         : "Indonesia-based technology company.",
     alternates: {
@@ -29,20 +25,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function LocaleLayout({ children, params }: Props) {
-  const dict = await getDictionary(params.locale);
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const dict = await getDictionary(locale);
   return (
     <>
       <header className="border-b">
         <nav className="container h-16 flex items-center justify-between">
-          <Link href={`/${params.locale}`} className="text-[18px] font-semibold text-[color:var(--brand-navy)]">
+          <Link href={`/${locale}`} className="text-[18px] font-semibold text-[color:var(--brand-navy)]">
             {dict.brand}
           </Link>
           <div className="flex items-center gap-4 text-sm">
-            <Link href={`/${params.locale}`} className="hover:underline">{dict.nav.home}</Link>
-            <Link href={`/${params.locale}/about`} className="hover:underline">{dict.nav.about}</Link>
-            <Link href={`/${params.locale}/contact`} className="hover:underline">{dict.nav.contact}</Link>
-            <LanguageToggle locale={params.locale} />
+            <Link href={`/${locale}`} className="hover:underline">{dict.nav.home}</Link>
+            <Link href={`/${locale}/about`} className="hover:underline">{dict.nav.about}</Link>
+            <Link href={`/${locale}/contact`} className="hover:underline">{dict.nav.contact}</Link>
+            <LanguageToggle locale={locale} />
           </div>
         </nav>
       </header>

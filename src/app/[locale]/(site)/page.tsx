@@ -1,9 +1,10 @@
-import { getDictionary, type Locale } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function Home({ params }: { params: { locale: Locale } }) {
-  const dict = await getDictionary(params.locale);
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const dict = await getDictionary(locale);
   return (
     <section>
       {/* Hero with navy background */}
@@ -18,11 +19,11 @@ export default async function Home({ params }: { params: { locale: Locale } }) {
                 {dict.hero.subtitle}
               </p>
               <div className="mt-8 flex gap-4">
-                <Link href={`/${params.locale}/contact`} className="btn btn-primary">
+                <Link href={`/${locale}/contact`} className="btn btn-primary">
                   {dict.hero.cta}
                 </Link>
-                <Link href={`/${params.locale}/about`} className="btn btn-secondary">
-                  {params.locale === "id" ? "Pelajari Lebih Lanjut" : "Learn More"}
+                <Link href={`/${locale}/about`} className="btn btn-secondary">
+                  {locale === "id" ? "Pelajari Lebih Lanjut" : "Learn More"}
                 </Link>
               </div>
             </div>
@@ -40,7 +41,7 @@ export default async function Home({ params }: { params: { locale: Locale } }) {
             <div key={i} className="rounded-lg border p-6">
               <h3 className="font-semibold text-[color:var(--brand-navy)]">{k}</h3>
               <p className="text-sm text-neutral-600 mt-2">
-                {params.locale === "id"
+                {locale === "id"
                   ? "Fokus pada prioritas, kualitas rekayasa, dan pengiriman yang konsisten."
                   : "Focus on priorities, engineering quality, and consistent delivery."}
               </p>

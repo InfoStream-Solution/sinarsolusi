@@ -1,7 +1,8 @@
 export type Locale = "id" | "en";
 
-export async function getDictionary(locale: Locale) {
-  switch (locale) {
+export async function getDictionary(locale: string) {
+  const normalized: Locale = locale === "id" ? "id" : "en";
+  switch (normalized) {
     case "id":
       return (await import("@/locales/id.json")).default;
     case "en":
