@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "Indonesia-based technology partner.",
 };
 
+export const runtime = "edge";
+
 export default async function RootLayout({
   children,
 }: Readonly<{

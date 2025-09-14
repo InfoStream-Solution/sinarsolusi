@@ -1,5 +1,7 @@
 import { getDictionary } from "@/lib/i18n";
 
+export const runtime = "edge";
+
 export default async function About({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
