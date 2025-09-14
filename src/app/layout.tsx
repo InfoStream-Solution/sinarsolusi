@@ -22,12 +22,12 @@ export const metadata: Metadata = {
   description: "Indonesia-based technology partner.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hdrs = headers();
+  const hdrs = await headers();
   const locale = hdrs.get("x-locale") ?? "en";
   return (
     <html lang={locale}>
