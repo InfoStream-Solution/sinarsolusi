@@ -2,7 +2,7 @@ import { getDictionary } from "@/lib/i18n";
 import Image from "next/image";
 import Link from "next/link";
 
-export const runtime = "edge";
+
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

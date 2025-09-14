@@ -3,7 +3,7 @@ import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
 import { LanguageToggle } from "./ui/LanguageToggle";
 
-export const runtime = "edge";
+
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;

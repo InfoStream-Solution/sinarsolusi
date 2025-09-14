@@ -13,8 +13,10 @@
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "check:next": "next lint && next build",
-    "cf:build": "npx @cloudflare/next-on-pages@1",
-    "cf:dev": "npm run cf:build && npx wrangler pages dev .vercel/output/static --compatibility-flag=nodejs_compat"
+    "build:worker": "opennextjs-cloudflare build",
+    "dev:worker": "wrangler dev --port 8771",
+    "preview:worker": "npm run build:worker && npm run dev:worker",
+    "deploy:worker": "npm run build:worker && wrangler deploy"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -22,6 +24,8 @@
     "next": "15.5.3"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1",
+    "wrangler": "^4",
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,6 +1,6 @@
 import { getDictionary } from "@/lib/i18n";
 
-export const runtime = "edge";
+
 
 export default async function Contact({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
