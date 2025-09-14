@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 export default function NotFound() {
   return (
     <div className="container py-16">

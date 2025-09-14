@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { getDictionary, locales } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
 import { LanguageToggle } from "./ui/LanguageToggle";
 
-export const runtime = "nodejs";
-
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
+export const runtime = "edge";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -27,7 +23,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
   return (

@@ -1,5 +1,7 @@
 import { getDictionary } from "@/lib/i18n";
 
+export const runtime = "edge";
+
 export default async function Contact({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
@@ -27,7 +29,10 @@ export default async function Contact({ params }: { params: Promise<{ locale: st
         </div>
         <div>
           <label className="block text-sm mb-1">{dict.contact.message}</label>
-          <textarea className="w-full rounded-md border px-3 py-2 min-h-32" placeholder={locale === "id" ? "Ceritakan kebutuhan Anda…" : "Tell us about your needs…"} />
+          <textarea
+            className="w-full rounded-md border px-3 py-2 min-h-32"
+            placeholder={locale === "id" ? "Ceritakan kebutuhan Anda…" : "Tell us about your needs…"}
+          />
         </div>
         <div className="flex gap-3">
           <button className="btn btn-primary" type="button">{dict.contact.send}</button>
