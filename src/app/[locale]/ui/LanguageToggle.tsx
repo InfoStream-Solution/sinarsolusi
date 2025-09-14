@@ -2,9 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import type { Locale } from "@/lib/i18n";
-
-export function LanguageToggle({ locale }: { locale: Locale }) {
+export function LanguageToggle({ locale }: { locale: string }) {
   const pathname = usePathname();
   const other = locale === "id" ? "en" : "id";
 
@@ -21,4 +19,3 @@ export function LanguageToggle({ locale }: { locale: Locale }) {
     </Link>
   );
 }
-
