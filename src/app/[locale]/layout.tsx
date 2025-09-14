@@ -3,6 +3,8 @@ import { getDictionary, locales } from "@/lib/i18n";
 import Link from "next/link";
 import { LanguageToggle } from "./ui/LanguageToggle";
 
+export const runtime = "edge";
+
 export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
