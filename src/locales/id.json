@@ -1,0 +1,30 @@
+{
+  "brand": "Sinar Solusi",
+  "nav": {
+    "home": "Beranda",
+    "about": "Tentang",
+    "contact": "Kontak"
+  },
+  "hero": {
+    "title": "Menerangi langkah menuju hasil",
+    "subtitle": "Mitra teknologi berbasis Indonesia yang membantu tim bergerak dengan jelas dan cepat.",
+    "cta": "Hubungi Kami"
+  },
+  "about": {
+    "title": "Tentang Sinar Solusi",
+    "content": "Kami menghadirkan solusi digital yang praktis dan berdampak terukur. Pendekatan kami memadukan strategi, rekayasa, dan kepedulian pada pengalaman pengguna."
+  },
+  "contact": {
+    "title": "Kontak",
+    "subtitle": "Mari bicarakan tujuan Anda.",
+    "name": "Nama",
+    "email": "Email",
+    "phone": "Telepon",
+    "message": "Pesan",
+    "send": "Kirim Pesan",
+    "whatsapp": "Chat via WhatsApp"
+  },
+  "footer": {
+    "rights": "Hak cipta dilindungi."
+  }
+}

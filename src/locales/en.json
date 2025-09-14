@@ -1,0 +1,30 @@
+{
+  "brand": "Sinar Solusi",
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Illuminate your path to results",
+    "subtitle": "Indonesia-based technology partner helping teams move with clarity and speed.",
+    "cta": "Contact Us"
+  },
+  "about": {
+    "title": "About Sinar Solusi",
+    "content": "We deliver practical digital solutions that bring measurable impact. Our approach blends strategy, engineering, and care for user experience."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Let’s talk about your goals.",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message",
+    "send": "Send Message",
+    "whatsapp": "Chat on WhatsApp"
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  }
+}
