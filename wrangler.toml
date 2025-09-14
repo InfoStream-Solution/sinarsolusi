@@ -1,9 +1,0 @@
-name = "sinar-solusi"
-compatibility_date = "2025-01-01"
-
-# For Cloudflare Pages local dev (wrangler pages dev)
-pages_build_output_dir = ".vercel/output/static"
-
-# Enable Node.js APIs polyfill for compatibility where needed
-compatibility_flags = ["nodejs_compat"]
-
