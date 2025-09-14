@@ -38,7 +38,7 @@ export default async function Contact({ params }: { params: Promise<{ locale: st
           <button className="btn btn-primary" type="button">{dict.contact.send}</button>
           <a
             className="btn btn-secondary"
-            href="https://wa.me/6281234567890"
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? ""}`}
             target="_blank"
             rel="noopener noreferrer"
           >
