@@ -1,0 +1,88 @@
+import fs from 'fs';
+import path from 'path';
+
+export type Offer = {
+  slug: string;
+  title: string;
+  description?: string;
+  thumbnails: string[];
+  images: string[];
+  body: string;
+};
+
+const CONTENT_ROOT = path.join(process.cwd(), 'src', 'content', 'offers');
+
+function parseFrontMatter(src: string): { data: Record<string, any>; body: string } {
+  const fm = src.startsWith('---') ? src.indexOf('\n---', 3) : -1;
+  if (fm === -1) return { data: {}, body: src };
+  const header = src.slice(3, fm).trim();
+  const body = src.slice(fm + 4).replace(/^\s+/, '');
+  const data: Record<string, any> = {};
+  for (const line of header.split(/\r?\n/)) {
+    const m = line.match(/^([A-Za-z0-9_\-]+):\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1];
+    let val = m[2];
+    if (val.startsWith('[') && val.endsWith(']')) {
+      const inner = val.slice(1, -1);
+      const arr = inner
+        .split(',')
+        .map((s) => s.trim().replace(/^"|"$/g, ''))
+        .filter(Boolean);
+      (data as any)[key] = arr;
+    } else {
+      (data as any)[key] = val.replace(/^"|"$/g, '');
+    }
+  }
+  return { data, body };
+}
+
+export function getOffers(): Offer[] {
+  const entries = fs.readdirSync(CONTENT_ROOT, { withFileTypes: true });
+  const dirs = entries.filter((e) => e.isDirectory());
+  const offers: Offer[] = [];
+  for (const d of dirs) {
+    const slug = d.name;
+    const p = path.join(CONTENT_ROOT, slug, 'index.md');
+    // prefer localized english if present for title/desc; fall back to index.md for body if no en
+    const en = path.join(CONTENT_ROOT, slug, 'index.en.md');
+    const hasBase = fs.existsSync(p);
+    const hasEn = fs.existsSync(en);
+    if (!hasBase && !hasEn) continue;
+    const raw = fs.readFileSync(hasBase ? p : en, 'utf8');
+    const { data, body } = parseFrontMatter(raw);
+    // merge possible english meta
+    let title = (data.title as string) || slug;
+    let description = (data.description as string) || '';
+    if (hasEn) {
+      const { data: enData } = parseFrontMatter(fs.readFileSync(en, 'utf8'));
+      title = (enData.title as string) || title;
+      description = (enData.description as string) || description;
+    }
+    offers.push({
+      slug: (data.slug as string) || slug,
+      title,
+      description,
+      thumbnails: (data.thumbnails as string[]) || [],
+      images: (data.images as string[]) || [],
+      body,
+    });
+  }
+  return offers;
+}
+
+export function getOfferBySlug(slug: string): Offer | null {
+  const p = path.join(CONTENT_ROOT, slug, 'index.md');
+  const en = path.join(CONTENT_ROOT, slug, 'index.en.md');
+  if (!fs.existsSync(p) && !fs.existsSync(en)) return null;
+  const base = fs.existsSync(p) ? parseFrontMatter(fs.readFileSync(p, 'utf8')) : { data: {}, body: '' };
+  const eng = fs.existsSync(en) ? parseFrontMatter(fs.readFileSync(en, 'utf8')) : { data: {}, body: '' };
+  return {
+    slug: ((base.data.slug as string) || (eng.data.slug as string)) || slug,
+    title: ((eng.data.title as string) || (base.data.title as string)) || slug,
+    description: ((eng.data.description as string) || (base.data.description as string)) || '',
+    thumbnails: ((base.data.thumbnails as string[]) || (eng.data.thumbnails as string[])) || [],
+    images: ((base.data.images as string[]) || (eng.data.images as string[])) || [],
+    body: base.body || eng.body,
+  };
+}
