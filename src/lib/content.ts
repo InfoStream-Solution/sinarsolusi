@@ -10,6 +10,15 @@ export type Offer = {
   body: string;
 };
 
+export type LocalizedOffer = {
+  slug: { en: string; id: string };
+  title: { en: string; id: string };
+  description: { en: string; id: string };
+  thumbnails: string[];
+  images: string[];
+  body: { en: string; id: string };
+};
+
 const CONTENT_ROOT = path.join(process.cwd(), 'src', 'content', 'offers');
 
 function parseFrontMatter(src: string): { data: Record<string, any>; body: string } {
@@ -84,5 +93,54 @@ export function getOfferBySlug(slug: string): Offer | null {
     thumbnails: ((base.data.thumbnails as string[]) || (eng.data.thumbnails as string[])) || [],
     images: ((base.data.images as string[]) || (eng.data.images as string[])) || [],
     body: base.body || eng.body,
+  };
+}
+
+export function getLocalizedOffers(): LocalizedOffer[] {
+  const entries = fs.readdirSync(CONTENT_ROOT, { withFileTypes: true });
+  const dirs = entries.filter((e) => e.isDirectory());
+  const offers: LocalizedOffer[] = [];
+  for (const d of dirs) {
+    const folder = d.name;
+    const pId = path.join(CONTENT_ROOT, folder, 'index.md');
+    const pEn = path.join(CONTENT_ROOT, folder, 'index.en.md');
+    if (!fs.existsSync(pId) && !fs.existsSync(pEn)) continue;
+    const base = fs.existsSync(pId) ? parseFrontMatter(fs.readFileSync(pId, 'utf8')) : { data: {}, body: '' };
+    const eng = fs.existsSync(pEn) ? parseFrontMatter(fs.readFileSync(pEn, 'utf8')) : { data: {}, body: '' };
+    offers.push({
+      slug: {
+        id: (base.data.slug as string) || folder,
+        en: (eng.data.slug as string) || folder,
+      },
+      title: {
+        id: (base.data.title as string) || folder,
+        en: (eng.data.title as string) || (base.data.title as string) || folder,
+      },
+      description: {
+        id: (base.data.description as string) || '',
+        en: (eng.data.description as string) || (base.data.description as string) || '',
+      },
+      thumbnails: ((base.data.thumbnails as string[]) || (eng.data.thumbnails as string[])) || [],
+      images: ((base.data.images as string[]) || (eng.data.images as string[])) || [],
+      body: {
+        id: base.body || eng.body,
+        en: eng.body || base.body,
+      },
+    });
+  }
+  return offers;
+}
+
+export function getOfferByLocaleSlug(locale: 'en' | 'id', slug: string): Offer | null {
+  const all = getLocalizedOffers();
+  const match = all.find((o) => o.slug[locale] === slug);
+  if (!match) return null;
+  return {
+    slug: match.slug[locale],
+    title: match.title[locale],
+    description: match.description[locale],
+    thumbnails: match.thumbnails,
+    images: match.images,
+    body: match.body[locale],
   };
 }
