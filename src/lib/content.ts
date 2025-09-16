@@ -24,24 +24,40 @@ const CONTENT_ROOT = path.join(process.cwd(), 'src', 'content', 'offers');
 function parseFrontMatter(src: string): { data: Record<string, any>; body: string } {
   const fm = src.startsWith('---') ? src.indexOf('\n---', 3) : -1;
   if (fm === -1) return { data: {}, body: src };
-  const header = src.slice(3, fm).trim();
+  const header = src.slice(3, fm).replace(/\r\n/g, '\n').trimEnd();
   const body = src.slice(fm + 4).replace(/^\s+/, '');
+  const lines = header.split('\n');
   const data: Record<string, any> = {};
-  for (const line of header.split(/\r?\n/)) {
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
     const m = line.match(/^([A-Za-z0-9_\-]+):\s*(.*)$/);
-    if (!m) continue;
+    if (!m) { i++; continue; }
     const key = m[1];
-    let val = m[2];
+    const val = m[2];
+    // Block list (YAML): key:\n  // - value\n  // - value
+    if (val === '' && i + 1 < lines.length && /^\s*-\s+/.test(lines[i + 1])) {
+      const arr: string[] = [];
+      i++;
+      while (i < lines.length && /^\s*-\s+/.test(lines[i])) {
+        const item = lines[i].replace(/^\s*-\s+/, '').trim().replace(/^\"|\"$/g, '');
+        if (item) arr.push(item);
+        i++;
+      }
+      (data as any)[key] = arr;
+      continue;
+    }
+    // Inline array
     if (val.startsWith('[') && val.endsWith(']')) {
       const inner = val.slice(1, -1);
-      const arr = inner
-        .split(',')
-        .map((s) => s.trim().replace(/^"|"$/g, ''))
-        .filter(Boolean);
+      const arr = inner.split(',').map((s) => s.trim().replace(/^\"|\"$/g, '')).filter(Boolean);
       (data as any)[key] = arr;
-    } else {
-      (data as any)[key] = val.replace(/^"|"$/g, '');
+      i++;
+      continue;
     }
+    // Scalar
+    (data as any)[key] = val.replace(/^\"|\"$/g, '');
+    i++;
   }
   return { data, body };
 }
