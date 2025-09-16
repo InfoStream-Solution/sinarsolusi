@@ -42,10 +42,11 @@ export default async function LocaleLayout({
               {dict.brand}
             </Link>
             <div className="flex items-center gap-4 text-sm">
-              <Link href={`/${locale}`} className="hover:underline">{dict.nav.home}</Link>
-              <Link href={`/${locale}/about`} className="hover:underline">{dict.nav.about}</Link>
-              <Link href={`/${locale}/contact`} className="hover:underline">{dict.nav.contact}</Link>
-              <LanguageToggle locale={locale} />
+            <Link href={`/${locale}`} className="hover:underline">{dict.nav.home}</Link>
+            <Link href={`/${locale}/about`} className="hover:underline">{dict.nav.about}</Link>
+            <Link href={`/${locale}/contact`} className="hover:underline">{dict.nav.contact}</Link>
+            <Link href={`/${locale}/offers`} className="hover:underline">{dict.nav.offers}</Link>
+            <LanguageToggle locale={locale} />
             </div>
           </nav>
         </header>

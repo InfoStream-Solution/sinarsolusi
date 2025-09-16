@@ -29,8 +29,8 @@ export default function RootLayout({
 }>) {
   // Note: The <html lang> is set in src/app/[locale]/layout.tsx
   return (
-    <>
+    <div className={`${geistSans.variable} ${geistMono.variable}`}>
       {children}
-    </>
+    </div>
   );
 }
