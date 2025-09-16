@@ -3,7 +3,8 @@
   "nav": {
     "home": "Home",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "offers": "Offers"
   },
   "hero": {
     "title": "Illuminate your path to results",
