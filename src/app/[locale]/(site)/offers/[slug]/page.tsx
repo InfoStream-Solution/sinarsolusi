@@ -1,4 +1,4 @@
-import Image from "next/image";
+// Image used in GalleryMedia; no direct usage here
 import { notFound } from "next/navigation";
 import { getOfferByLocaleSlug, getLocalizedOffers } from "@/lib/content";
 import { GalleryMedia } from "./GalleryMedia";
@@ -52,7 +52,7 @@ function markdownToHtml(md: string): string {
       .replace(/`([^`]+)`/g, '<code>$1</code>');
 
   const htmlBlocks: string[] = [];
-  for (let block of blocks) {
+  for (const block of blocks) {
     const lines = block.split('\n');
     // Headings (single-line)
     if (/^###\s+/.test(lines[0])) {

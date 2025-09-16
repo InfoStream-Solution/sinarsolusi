@@ -7,7 +7,7 @@ export const revalidate = false;
 
 export default async function OffersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const dict = await getDictionary(locale);
+  await getDictionary(locale);
   const offers = getLocalizedOffers();
   const heading = locale === "id" ? "Jasa" : "Offers";
   return (

@@ -83,7 +83,7 @@ function Carousel({ items, hoverSwap, aspect }: { items: Item[]; hoverSwap: bool
     };
     el.addEventListener('scroll', handler, { passive: true });
     handler();
-    return () => el.removeEventListener('scroll', handler as any);
+    return () => el.removeEventListener('scroll', handler as EventListener);
   }, []);
 
   const scrollTo = (i: number) => {
@@ -125,4 +125,3 @@ function Carousel({ items, hoverSwap, aspect }: { items: Item[]; hoverSwap: bool
     </div>
   );
 }
-

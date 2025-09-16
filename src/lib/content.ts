@@ -1,4 +1,4 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import path from 'path';
 
 export type Offer = {
@@ -21,13 +21,13 @@ export type LocalizedOffer = {
 
 const CONTENT_ROOT = path.join(process.cwd(), 'src', 'content', 'offers');
 
-function parseFrontMatter(src: string): { data: Record<string, any>; body: string } {
+function parseFrontMatter(src: string): { data: Record<string, unknown>; body: string } {
   const fm = src.startsWith('---') ? src.indexOf('\n---', 3) : -1;
   if (fm === -1) return { data: {}, body: src };
   const header = src.slice(3, fm).replace(/\r\n/g, '\n').trimEnd();
   const body = src.slice(fm + 4).replace(/^\s+/, '');
   const lines = header.split('\n');
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
@@ -44,19 +44,19 @@ function parseFrontMatter(src: string): { data: Record<string, any>; body: strin
         if (item) arr.push(item);
         i++;
       }
-      (data as any)[key] = arr;
+      (data as Record<string, unknown>)[key] = arr;
       continue;
     }
     // Inline array
     if (val.startsWith('[') && val.endsWith(']')) {
       const inner = val.slice(1, -1);
       const arr = inner.split(',').map((s) => s.trim().replace(/^\"|\"$/g, '')).filter(Boolean);
-      (data as any)[key] = arr;
+      (data as Record<string, unknown>)[key] = arr;
       i++;
       continue;
     }
     // Scalar
-    (data as any)[key] = val.replace(/^\"|\"$/g, '');
+    (data as Record<string, unknown>)[key] = val.replace(/^\"|\"$/g, '');
     i++;
   }
   return { data, body };
@@ -160,3 +160,4 @@ export function getOfferByLocaleSlug(locale: 'en' | 'id', slug: string): Offer |
     body: match.body[locale],
   };
 }
+
