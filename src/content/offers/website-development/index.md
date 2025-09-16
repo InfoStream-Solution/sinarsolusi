@@ -15,6 +15,9 @@ images:
   - "/offers/website-development/design-coconut-exporter.png"
   - "/offers/website-development/design-rubber-exporter.png"
   - "/offers/website-development/design-corporate.png"
+galleryLayout: "carousel"
+hoverSwap: true
+aspect: "4/3"
 ---
 
 # 🌐 Jasa Pembuatan Website Landing Page

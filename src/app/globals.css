@@ -69,3 +69,17 @@ body {
 .container {
   @apply mx-auto px-4 sm:px-6 lg:px-8;
 }
+
+/* Make markdown images responsive and cap thumbnails */
+.prose img {
+  height: auto;
+  max-width: 100%;
+}
+.prose img[src*="/thumbnail/"] {
+  max-width: 480px;
+}
+@media (min-width: 640px) {
+  .prose img[src*="/thumbnail/"] {
+    max-width: 640px;
+  }
+}

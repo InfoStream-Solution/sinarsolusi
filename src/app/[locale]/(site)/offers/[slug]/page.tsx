@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getOfferByLocaleSlug, getLocalizedOffers } from "@/lib/content";
+import { GalleryMedia } from "./GalleryMedia";
 
 export const revalidate = false;
 
@@ -18,41 +19,23 @@ export default async function OfferDetail({ params }: { params: Promise<{ locale
   const { locale, slug } = await params;
   const offer = getOfferByLocaleSlug(locale, slug);
   if (!offer) return notFound();
+  const items = offer.images.map((full, i) => ({
+    full,
+    thumb: offer.thumbnails[i] || full,
+    alt: `${offer.title} ${i + 1}`,
+  }));
   return (
     <section className="container py-16 md:py-20">
       <h1 className="text-3xl md:text-4xl font-bold text-[color:var(--brand-navy)]">{offer.title}</h1>
       {offer.description && <p className="mt-2 text-neutral-700">{offer.description}</p>}
 
-      {offer.thumbnails.length > 0 && (
-        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {offer.thumbnails.map((t, i) => {
-            const thumb = t || offer.images[i] || "/vercel.svg";
-            const full = offer.images[i] || thumb;
-            return (
-              <div key={i} className="group relative aspect-[4/3] rounded-lg overflow-hidden border bg-neutral-50">
-                <Image
-                  src={thumb}
-                  alt={`${offer.title} ${i + 1} thumbnail`}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-opacity duration-200 opacity-100 group-hover:opacity-0"
-                />
-                <Image
-                  src={full}
-                  alt={`${offer.title} ${i + 1} full`}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-opacity duration-200 opacity-0 group-hover:opacity-100"
-                />
-              </div>
-            );
-          })}
-        </div>
+      {items.length > 0 && (
+        <GalleryMedia items={items} layout="carousel" hoverSwap={true} aspect="4/3" />
       )}
 
       {offer.body && (
         <article
-          className="prose prose-neutral max-w-none mt-10 prose-headings:text-[color:var(--brand-navy)]"
+          className="prose prose-neutral max-w-none mt-10 prose-headings:text-[color:var(--brand-navy)] prose-img:w-full prose-img:h-auto"
           dangerouslySetInnerHTML={{ __html: markdownToHtml(offer.body) }}
         />
       )}
