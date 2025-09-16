@@ -2,6 +2,8 @@ import { getDictionary } from "@/lib/i18n";
 
 
 
+export const revalidate = false;
+
 export default async function Contact({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
@@ -12,7 +14,7 @@ export default async function Contact({ params }: { params: Promise<{ locale: st
       </h1>
       <p className="mt-2 text-neutral-700">{dict.contact.subtitle}</p>
 
-      <form className="mt-8 grid gap-4">
+      <form className="mt-8 grid gap-4" method="post" action="/">
         <div>
           <label className="block text-sm mb-1">{dict.contact.name}</label>
           <input className="w-full rounded-md border px-3 py-2" placeholder="Jane Doe" />
@@ -35,10 +37,10 @@ export default async function Contact({ params }: { params: Promise<{ locale: st
           />
         </div>
         <div className="flex gap-3">
-          <button className="btn btn-primary" type="button">{dict.contact.send}</button>
+          <button className="btn btn-primary" type="submit">{dict.contact.send}</button>
           <a
             className="btn btn-secondary"
-            href="https://wa.me/6281234567890"
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? ""}`}
             target="_blank"
             rel="noopener noreferrer"
           >

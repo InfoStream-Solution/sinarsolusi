@@ -1,4 +1,5 @@
 import { getDictionary } from "@/lib/i18n";
+export const revalidate = false;
 
 export default async function About({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
