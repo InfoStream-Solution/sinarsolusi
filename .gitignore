@@ -310,3 +310,4 @@ cython_debug/
 /apps/website/node_modules/
 !apps/website/src/lib/
 !apps/website/src/lib/**
+AGENTS.md
