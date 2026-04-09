@@ -1,4 +1,4 @@
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary } from "../../../../lib/i18n";
 export const revalidate = false;
 
 export default async function About({ params }: { params: Promise<{ locale: string }> }) {

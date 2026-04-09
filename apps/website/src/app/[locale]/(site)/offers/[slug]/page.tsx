@@ -1,6 +1,6 @@
 // Image used in GalleryMedia; no direct usage here
 import { notFound } from "next/navigation";
-import { getOfferByLocaleSlug, getLocalizedOffers } from "@/lib/content";
+import { getOfferByLocaleSlug, getLocalizedOffers } from "../../../../../lib/content";
 import { GalleryMedia } from "./GalleryMedia";
 
 export const revalidate = false;

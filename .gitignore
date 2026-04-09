@@ -308,3 +308,5 @@ cython_debug/
 .codex/
 /apps/website/.next/
 /apps/website/node_modules/
+!apps/website/src/lib/
+!apps/website/src/lib/**

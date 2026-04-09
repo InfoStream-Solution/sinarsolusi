@@ -1,4 +1,4 @@
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary } from "../../../../lib/i18n";
 
 
 

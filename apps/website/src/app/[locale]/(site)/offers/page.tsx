@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getLocalizedOffers } from "@/lib/content";
-import { getDictionary } from "@/lib/i18n";
+import { getLocalizedOffers } from "../../../../lib/content";
+import { getDictionary } from "../../../../lib/i18n";
 
 export const revalidate = false;
 
