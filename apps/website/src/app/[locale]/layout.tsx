@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary } from "../../lib/i18n";
 import Link from "next/link";
 import { LanguageToggle } from "./ui/LanguageToggle";
 
