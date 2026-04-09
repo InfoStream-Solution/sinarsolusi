@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import "./globals.css";
-// Root layout is static; locale is handled in [locale]/layout
 
 const geistSans = Roboto({
   variable: "--font-geist-sans",
@@ -22,15 +22,19 @@ export const metadata: Metadata = {
   description: "Indonesia-based technology partner.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Note: The <html lang> is set in src/app/[locale]/layout.tsx
+  const requestHeaders = await headers();
+  const locale = requestHeaders.get("x-locale") ?? "id";
+
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable}`}>
-      {children}
-    </div>
+    <html lang={locale}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
+      </body>
+    </html>
   );
 }

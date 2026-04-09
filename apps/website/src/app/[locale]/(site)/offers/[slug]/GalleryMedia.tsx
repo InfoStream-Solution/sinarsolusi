@@ -62,7 +62,6 @@ function Tile({ item, hoverSwap, aspect }: { item: Item; hoverSwap: boolean; asp
 }
 
 function Carousel({ items, hoverSwap, aspect }: { items: Item[]; hoverSwap: boolean; aspect: "4/3"|"1/1"|"16/9" }) {
-  const a = aspectClass(aspect);
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
 
