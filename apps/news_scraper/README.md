@@ -30,29 +30,6 @@ CLI flags override env:
 - `--keep-seed` / `--no-keep-seed`
 - `--keep-scraped` / `--no-keep-scraped`
 
-## Run a Site
-
-```bash
-uv run scrape kompas.com
-```
-
-This resolves the site class for the given domain and scrapes its `start_url`.
-
-Output is written to:
-
-```text
-SEED_DIR/<domain>.seed
-```
-
-Recommended container-facing env values:
-
-```env
-SEED_DIR=/data/seed
-LINKS_DIR=/data/links
-SCRAPED_DIR=/data/scraped
-CONTENT_DIR=/data/content
-```
-
 ## Run Seeder
 
 ```bash
@@ -63,6 +40,9 @@ Seeder flow:
 - run `nscraper` for the site's `start_url`
 - write the seed file to `SEED_DIR/<domain>.seed`
 - parse internal links from the seed content
+- normalize links before writing them:
+  - strip fragments and irrelevant query params
+  - canonicalize article URLs where the site supports it
 - write JSONL link records to `LINKS_DIR/<domain>.jsonl`
 - remove the intermediate seed file by default
 
@@ -126,6 +106,12 @@ Or via env:
 KEEP_SCRAPED=1 uv run extract-news kompas.com
 ```
 
+If an article fails during extraction, the run continues and the failure is appended to:
+
+```text
+CONTENT_DIR/errors/<domain>/extract-news.jsonl
+```
+
 For Kompas, article URLs are recognized by the usual pattern:
 
 ```text
@@ -166,14 +152,14 @@ docker run --rm \
   -v /var/lib/sinarsolusi/links:/data/links \
   -v /var/lib/sinarsolusi/scraped:/data/scraped \
   -v /var/lib/sinarsolusi/content:/data/content \
-  news-scraper scrape kompas.com
+  news-scraper seed kompas.com
 ```
 
 Or with Compose:
 
 ```bash
 cp compose.env.example compose.env
-docker compose --env-file compose.env run --rm news-scraper scrape kompas.com
+docker compose --env-file compose.env run --rm news-scraper seed kompas.com
 ```
 
 Run other entrypoints the same way:

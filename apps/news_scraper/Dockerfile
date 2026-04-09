@@ -18,4 +18,4 @@ COPY src ./src
 RUN uv sync --frozen --no-dev
 
 ENTRYPOINT ["uv", "run"]
-CMD ["scrape"]
+CMD ["seed"]

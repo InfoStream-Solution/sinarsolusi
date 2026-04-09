@@ -7,7 +7,6 @@ requires-python = ">=3.11"
 dependencies = ["nscraper==0.1.4"]
 
 [project.scripts]
-scrape = "src.scrape:main"
 seed = "src.seed:main"
 extract-news = "src.extract_news:main"
 
