@@ -1,39 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# sinarsolusi
 
-## Getting Started
+This repository is now structured to support future monorepo growth.
 
-First, run the development server:
+The current production website lives in `apps/website`.
+
+## Current app
+
+- Public marketing website: `apps/website`
+
+## Local development
+
+Run commands from `apps/website`:
 
 ```bash
+cd apps/website
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Use Node.js `24.14.1` or another Node 24 release that satisfies `apps/website/package.json`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-This project targets Vercel’s first‑class Next.js hosting.
-
-- Push to GitHub and import the repo in Vercel.
-- Build command: `next build` (default).
-- Install command: `npm ci` (default) or leave automatic.
-- No custom adapter required; remove Cloudflare-specific files and scripts.
+For Vercel, set the project Root Directory to `apps/website`.
