@@ -97,7 +97,13 @@ class KompasComSite(BaseSite):
     def _should_skip_item(self, text: str) -> bool:
         if not text:
             return True
+        if text.startswith("Penulis:"):
+            return True
+        if text.startswith("( Sumber:") or text.startswith("(Sumber:"):
+            return True
         if text.startswith("Baca juga:"):
+            return True
+        if text.startswith("Artikel ini pernah tayang"):
             return True
         if "Gabung KOMPAS.com Plus sekarang" in text:
             return True
