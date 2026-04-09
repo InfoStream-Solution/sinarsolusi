@@ -1,0 +1,22 @@
+[project]
+name = "news-scraper"
+version = "0.1.0"
+description = "Modular workspace for web and news scraping"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["nscraper==0.1.4"]
+
+[project.scripts]
+scrape = "src.scrape:main"
+seed = "src.seed:main"
+extract-news = "src.extract_news:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
