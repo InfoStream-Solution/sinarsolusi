@@ -4,9 +4,10 @@ import argparse
 import json
 
 from .config import get_settings
-from .links import extract_internal_links, write_links
+from .links import extract_internal_links, normalize_links, write_links
 from .paths import links_jsonl_path
 from .site_loader import load_site
+from .utils import configure_logging, get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -29,7 +30,10 @@ def main() -> None:
     args = parser.parse_args()
 
     settings = get_settings()
+    configure_logging(debug=settings.scraper_debug)
+    logger = get_logger("seed")
     site = load_site(args.domain, settings=settings)
+    logger.info("seed_start domain=%r start_url=%r", site.domain, site.start_url)
     scrape_result = site.scrape()
 
     links = extract_internal_links(
@@ -37,8 +41,18 @@ def main() -> None:
         scrape_result.content,
         allowed_hosts=site.link_allowed_hosts,
     )
+    links = normalize_links(
+        links,
+        lambda url: site.normalize_article_url(url) if site.is_article_url(url) else site.normalize_url(url),
+    )
     links_path = links_jsonl_path(settings.links_dir, site.domain)
     write_links(links_path, links)
+    logger.info(
+        "seed_links_written domain=%r links_path=%r link_count=%d",
+        site.domain,
+        str(links_path),
+        len(links),
+    )
 
     seed_output_path = site.output_path
     removed_seed_file = False
@@ -46,6 +60,7 @@ def main() -> None:
     if not keep_seed and seed_output_path.exists():
         seed_output_path.unlink()
         removed_seed_file = True
+        logger.info("seed_cleanup domain=%r seed_output_path=%r", site.domain, str(seed_output_path))
 
     payload = {
         "domain": site.domain,
@@ -56,6 +71,13 @@ def main() -> None:
         "links_output_path": str(links_path),
         "link_count": len(links),
     }
+    logger.info(
+        "seed_done domain=%r keep_seed=%r removed_seed_file=%r link_count=%d",
+        site.domain,
+        keep_seed,
+        removed_seed_file,
+        len(links),
+    )
     print(json.dumps(payload, indent=2))
 
 

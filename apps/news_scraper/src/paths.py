@@ -33,3 +33,7 @@ def parsed_articles_dir(content_dir: Path, domain: str) -> Path:
 
 def scraped_articles_dir(scraped_dir: Path, domain: str) -> Path:
     return scraped_dir / domain / "article_html"
+
+
+def error_log_path(content_dir: Path, domain: str, command: str) -> Path:
+    return content_dir / "errors" / domain / f"{command}.jsonl"

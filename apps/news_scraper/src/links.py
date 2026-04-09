@@ -60,6 +60,19 @@ def write_links(path: Path, links: list[LinkRecord]) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def normalize_links(
+    links: list[LinkRecord],
+    normalizer: callable,
+) -> list[LinkRecord]:
+    discovered: dict[str, LinkRecord] = {}
+    for link in links:
+        normalized_url = normalizer(link.url)
+        existing = discovered.get(normalized_url)
+        scraped = link.scraped if existing is None else (existing.scraped or link.scraped)
+        discovered[normalized_url] = LinkRecord(url=normalized_url, scraped=scraped)
+    return sorted(discovered.values(), key=lambda item: item.url)
+
+
 def read_links(path: Path) -> list[LinkRecord]:
     links: list[LinkRecord] = []
     for raw_line in path.read_text(encoding="utf-8").splitlines():

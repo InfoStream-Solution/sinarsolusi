@@ -4,6 +4,10 @@ from importlib import import_module
 
 from .config import Settings
 from .sites.base import BaseSite
+from .utils import get_logger
+
+
+logger = get_logger("site_loader")
 
 
 def _domain_to_module_name(domain: str) -> str:
@@ -18,6 +22,14 @@ def _domain_to_class_name(domain: str) -> str:
 def load_site(domain: str, settings: Settings) -> BaseSite:
     module_name = _domain_to_module_name(domain)
     class_name = _domain_to_class_name(domain)
+    logger.info(
+        "site_load_start domain=%r module=%r class_name=%r",
+        domain,
+        module_name,
+        class_name,
+    )
     module = import_module(f"{__package__}.sites.{module_name}")
     site_class = getattr(module, class_name)
-    return site_class(settings=settings)
+    site = site_class(settings=settings)
+    logger.info("site_load_done domain=%r site_class=%r", domain, site_class.__name__)
+    return site
