@@ -20,10 +20,8 @@ This app is intentionally small and site-driven:
 ```text
 apps/news_scraper/
 ├── Dockerfile
-├── compose.yaml
 ├── pyproject.toml
 ├── .env.example
-├── compose.env.example
 └── src/
     ├── config.py
     ├── extract_news.py
@@ -389,25 +387,18 @@ Each error record includes:
 
 ## Container
 
-Build from `apps/news_scraper`:
+Build the container image from the repo root:
 
 ```bash
-docker build -t news-scraper .
+docker build -t news-scraper -f apps/news_scraper/Dockerfile apps/news_scraper
 ```
 
-The image uses:
-- `ENTRYPOINT ["uv", "run"]`
-- default command:
-  - `seed`
+The production image runs the app commands directly. Use `seed` or `extract-news` as the container command.
 
 So in containers you run commands like:
 
 ```bash
 docker run --rm \
-  -e SEED_DIR=/data/seed \
-  -e LINKS_DIR=/data/links \
-  -e SCRAPED_DIR=/data/scraped \
-  -e CONTENT_DIR=/data/content \
   -v /var/lib/sinarsolusi/seed:/data/seed \
   -v /var/lib/sinarsolusi/links:/data/links \
   -v /var/lib/sinarsolusi/scraped:/data/scraped \
@@ -419,10 +410,6 @@ Or:
 
 ```bash
 docker run --rm \
-  -e SEED_DIR=/data/seed \
-  -e LINKS_DIR=/data/links \
-  -e SCRAPED_DIR=/data/scraped \
-  -e CONTENT_DIR=/data/content \
   -v /var/lib/sinarsolusi/seed:/data/seed \
   -v /var/lib/sinarsolusi/links:/data/links \
   -v /var/lib/sinarsolusi/scraped:/data/scraped \
@@ -430,35 +417,7 @@ docker run --rm \
   news-scraper extract-news kompas.com
 ```
 
-## Docker Compose
-
-Create local Compose env from the example:
-
-```bash
-cp compose.env.example compose.env
-```
-
-Recommended `compose.env`:
-
-```env
-HOST_SEED_DIR=/var/lib/sinarsolusi/seed
-HOST_LINKS_DIR=/var/lib/sinarsolusi/links
-HOST_SCRAPED_DIR=/var/lib/sinarsolusi/scraped
-HOST_CONTENT_DIR=/var/lib/sinarsolusi/content
-SCRAPER_DEBUG=0
-KEEP_SEED=0
-KEEP_SCRAPED=0
-```
-
-Run:
-
-```bash
-docker compose --env-file compose.env build news-scraper
-docker compose --env-file compose.env run --rm news-scraper seed kompas.com
-docker compose --env-file compose.env run --rm news-scraper extract-news kompas.com
-```
-
-Use `compose.env` for host-path and container-runtime settings. Do not put `HOST_*` values in the app `.env`.
+Use this section for local container smoke tests. For deploy/runtime and Compose-based server runs, see [`deploy/README.md`](/home/ubuntu/projects/sinarsolusi/deploy/README.md).
 
 ## Troubleshooting
 
@@ -482,26 +441,20 @@ Keeping the scraped HTML for one run makes parser debugging much easier.
 If you changed parser logic or command behavior and the container still behaves like the old version, rebuild the image:
 
 ```bash
-docker compose --env-file compose.env build --no-cache news-scraper
+docker build --no-cache -t news-scraper -f apps/news_scraper/Dockerfile apps/news_scraper
 ```
 
 Then rerun the command.
 
 ### `seed` or `extract-news` paths look wrong
 
-Check:
-- app `.env` for:
-  - `SEED_DIR`
-  - `LINKS_DIR`
-  - `SCRAPED_DIR`
-  - `CONTENT_DIR`
-- `compose.env` for:
-  - `HOST_SEED_DIR`
-  - `HOST_LINKS_DIR`
-  - `HOST_SCRAPED_DIR`
-  - `HOST_CONTENT_DIR`
+For local `uv run` development, check `.env` for:
+- `SEED_DIR`
+- `LINKS_DIR`
+- `SCRAPED_DIR`
+- `CONTENT_DIR`
 
-Use app `.env` for in-app paths and `compose.env` for host mounts.
+For containerized runs, check `deploy/runtime/news_scraper.compose.yaml` and the host mount paths used by the runtime scripts.
 
 ### Queue contains article variants or tracking params
 
