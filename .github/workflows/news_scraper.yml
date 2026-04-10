@@ -63,12 +63,14 @@ jobs:
 
       - name: Build image
         run: |
+          cd "$GITHUB_WORKSPACE"
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           IMAGE_TAG="${GITHUB_SHA}" \
           ./deploy/build/news_scraper.build.sh
 
       - name: Publish image
         run: |
+          cd "$GITHUB_WORKSPACE"
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG="${GITHUB_SHA}" \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
@@ -76,6 +78,7 @@ jobs:
 
       - name: Tag latest on main
         run: |
+          cd "$GITHUB_WORKSPACE"
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG=latest \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
@@ -91,6 +94,7 @@ jobs:
 
       - name: Sync runtime scripts and cron intent
         run: |
+          cd "$GITHUB_WORKSPACE"
           chmod +x deploy/runtime/news_scraper.sync.sh
           ./deploy/runtime/news_scraper.sync.sh \
             "${{ secrets.NEWS_SCRAPER_HOST }}" \
