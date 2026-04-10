@@ -22,6 +22,26 @@ This directory keeps deployment concerns separate from application source.
 - The cron entry pulls the GHCR image, then runs it on the host.
 - The server-side Compose file owns the host-to-container mounts.
 
+## Server Bootstrap
+
+On a new server, run the one-time bootstrap script to create the host data directories used by the Compose mounts:
+
+```bash
+DATA_ROOT=/var/lib/sinarsolusi bash ./ops/bootstrap/news_scraper.install.sh
+```
+
+This creates:
+
+```text
+/var/lib/sinarsolusi/
+├── content/
+├── links/
+├── scraped/
+└── seed/
+```
+
+If you use a different deploy user or data root, override `DEPLOY_USER` and `DATA_ROOT` accordingly. By default it uses the current user running the script, or `SUDO_USER` when invoked via `sudo`.
+
 ## Example Commands
 
 ```bash
