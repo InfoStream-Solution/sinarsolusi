@@ -22,8 +22,8 @@ ssh -i "${SSH_KEY}" -p "${PORT}" "${USER}@${HOST}" "mkdir -p '${TARGET_DIR}/depl
 RSYNC_SSH="ssh -i ${SSH_KEY} -p ${PORT}"
 
 rsync -avz -e "${RSYNC_SSH}" \
-  "${REPO_ROOT}/deploy/runtime/" \
-  "${USER}@${HOST}:${TARGET_DIR}/deploy/runtime/"
+  "${REPO_ROOT}/deploy/scripts/" \
+  "${USER}@${HOST}:${TARGET_DIR}/deploy/scripts/"
 
 rsync -avz -e "${RSYNC_SSH}" \
   "${REPO_ROOT}/ops/cron/" \
@@ -32,7 +32,3 @@ rsync -avz -e "${RSYNC_SSH}" \
 rsync -avz -e "${RSYNC_SSH}" \
   "${REPO_ROOT}/ops/bootstrap/" \
   "${USER}@${HOST}:${TARGET_DIR}/ops/bootstrap/"
-
-rsync -avz -e "${RSYNC_SSH}" \
-  "${REPO_ROOT}/deploy/runtime/news_scraper.compose.yaml" \
-  "${USER}@${HOST}:${TARGET_DIR}/deploy/runtime/news_scraper.compose.yaml"

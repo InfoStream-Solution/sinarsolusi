@@ -34,7 +34,7 @@ jobs:
       - name: Sync runtime scripts, bootstrap helper, cron intent, and compose file
         run: |
           export SSH_KEY="$HOME/.ssh/news_scraper_ci_key"
-          bash "${GITHUB_WORKSPACE}/deploy/runtime/news_scraper.sync.sh" \
+          bash "${GITHUB_WORKSPACE}/deploy/scripts/news_scraper.sync.sh" \
             "${{ secrets.NEWS_SCRAPER_HOST }}" \
             "${{ secrets.NEWS_SCRAPER_USER }}" \
             "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" \
