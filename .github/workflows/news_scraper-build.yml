@@ -1,9 +1,12 @@
-name: news_scraper
+name: news_scraper-build
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "apps/news_scraper/**"
+      - ".github/workflows/news_scraper-build.yml"
   workflow_dispatch:
 
 permissions:
@@ -44,8 +47,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      image_tag: ${{ steps.meta.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,54 +58,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image tag
-        id: meta
-        run: echo "image_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-
       - name: Build image
         run: |
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           IMAGE_TAG="${GITHUB_SHA}" \
           bash "${GITHUB_WORKSPACE}/deploy/build/news_scraper.build.sh"
 
-      - name: Publish image
+      - name: Publish image tag
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG="${GITHUB_SHA}" \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           bash "${GITHUB_WORKSPACE}/deploy/build/news_scraper.publish.sh"
 
-      - name: Tag latest on main
+      - name: Publish latest tag
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG=latest \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           bash "${GITHUB_WORKSPACE}/deploy/build/news_scraper.publish.sh"
-
-  sync_runtime:
-    runs-on: ubuntu-latest
-    needs: build_and_publish
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install SSH key
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.NEWS_SCRAPER_SSH_KEY }}" > ~/.ssh/news_scraper_ci_key
-          chmod 600 ~/.ssh/news_scraper_ci_key
-
-      - name: Trust server host key
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" "${{ secrets.NEWS_SCRAPER_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Sync runtime scripts and cron intent
-        run: |
-          export SSH_KEY="$HOME/.ssh/news_scraper_ci_key"
-          bash "${GITHUB_WORKSPACE}/deploy/runtime/news_scraper.sync.sh" \
-            "${{ secrets.NEWS_SCRAPER_HOST }}" \
-            "${{ secrets.NEWS_SCRAPER_USER }}" \
-            "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" \
-            "${{ secrets.NEWS_SCRAPER_DEPLOY_DIR }}"
