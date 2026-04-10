@@ -1,0 +1,18 @@
+services:
+  news-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SEED_DIR: /data/seed
+      LINKS_DIR: /data/links
+      SCRAPED_DIR: /data/scraped
+      CONTENT_DIR: /data/content
+      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
+      KEEP_SEED: ${KEEP_SEED:-0}
+      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
+    volumes:
+      - ${HOST_SEED_DIR:-/var/lib/sinarsolusi/seed}:/data/seed
+      - ${HOST_LINKS_DIR:-/var/lib/sinarsolusi/links}:/data/links
+      - ${HOST_SCRAPED_DIR:-/var/lib/sinarsolusi/scraped}:/data/scraped
+      - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content

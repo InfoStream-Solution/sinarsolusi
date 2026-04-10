@@ -308,6 +308,14 @@ cython_debug/
 .codex/
 /apps/website/.next/
 /apps/website/node_modules/
+/.venv/
+/apps/news_scraper/.venv/
+/apps/news_scraper/.python-version
+/apps/news_scraper/compose.env
+/apps/news_scraper/scraped/
 !apps/website/src/lib/
 !apps/website/src/lib/**
 AGENTS.md
+/next
+/apps/news_scraper/.scraped/
+/apps/news_scraper/.data/
