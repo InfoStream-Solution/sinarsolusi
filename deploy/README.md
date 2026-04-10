@@ -13,7 +13,7 @@ This directory keeps deployment concerns separate from application source.
 - `deploy/runtime/news_scraper.pull.sh` pulls the already-published image from GHCR.
 - `deploy/runtime/news_scraper.run.sh` runs the already-published image with the app's runtime env file.
 - The runtime script defaults to `IMAGE_TAG=latest` and expects `ENV_FILE=/etc/news_scraper.env` unless overridden.
-- `deploy/runtime/news_scraper.sync.sh` copies runtime scripts, cron intent, and the Compose file to the server over SSH.
+- `deploy/runtime/news_scraper.sync.sh` copies runtime scripts, bootstrap helper, cron intent, and the Compose file to the server over SSH.
 - `apps/news_scraper/compose.yaml` is the source of truth for the runtime env file and host mounts.
 
 ## Scheduling
