@@ -81,6 +81,20 @@ uv run seed kompas.com
 uv run extract-news kompas.com
 ```
 
+Tests:
+
+```bash
+uv run --extra test pytest
+uv run --extra test pytest --cov=src --cov-report=term-missing
+```
+
+Lint:
+
+```bash
+uv sync --extra lint
+uv run ruff check .
+```
+
 There is no standalone `scrape` command anymore. The intended pipeline is:
 1. seed
 2. extract-news
