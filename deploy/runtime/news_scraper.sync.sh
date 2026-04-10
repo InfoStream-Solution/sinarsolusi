@@ -17,7 +17,7 @@ SSH_KEY="${SSH_KEY:-$HOME/.ssh/news_scraper_ci_key}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-ssh -i "${SSH_KEY}" -p "${PORT}" "${USER}@${HOST}" "mkdir -p '${TARGET_DIR}/deploy/runtime' '${TARGET_DIR}/ops/cron'"
+ssh -i "${SSH_KEY}" -p "${PORT}" "${USER}@${HOST}" "mkdir -p '${TARGET_DIR}/deploy/runtime' '${TARGET_DIR}/ops/cron' '${TARGET_DIR}/apps/news_scraper'"
 
 RSYNC_SSH="ssh -i ${SSH_KEY} -p ${PORT}"
 
@@ -28,3 +28,7 @@ rsync -avz -e "${RSYNC_SSH}" \
 rsync -avz -e "${RSYNC_SSH}" \
   "${REPO_ROOT}/ops/cron/" \
   "${USER}@${HOST}:${TARGET_DIR}/ops/cron/"
+
+rsync -avz -e "${RSYNC_SSH}" \
+  "${REPO_ROOT}/apps/news_scraper/compose.yaml" \
+  "${USER}@${HOST}:${TARGET_DIR}/apps/news_scraper/compose.yaml"

@@ -1,5 +1,7 @@
 services:
   news-scraper:
+    env_file:
+      - ${ENV_FILE:-/etc/news_scraper.env}
     build:
       context: .
       dockerfile: Dockerfile
