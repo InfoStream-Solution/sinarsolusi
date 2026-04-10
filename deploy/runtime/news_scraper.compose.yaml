@@ -1,5 +1,6 @@
 services:
   news-scraper:
+    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
     env_file:
       - ${ENV_FILE:-/etc/news_scraper.env}
     environment:
