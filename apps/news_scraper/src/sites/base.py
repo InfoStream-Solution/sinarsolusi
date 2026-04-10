@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from pathlib import Path
 import re
 from nscraper import HttpScraper, ScrapeOptions
@@ -18,20 +17,27 @@ DEFAULT_HEADERS = {
 }
 
 
-@dataclass
 class BaseSite(LogMixin):
-    settings: Settings
-    start_url: str
-    domain: str
-    allowed_hosts: set[str] = field(default_factory=set)
-    article_path_patterns: tuple[re.Pattern[str], ...] = ()
-    default_nscrape_options: dict[str, object] = field(
-        default_factory=lambda: {
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        start_url: str,
+        domain: str,
+        allowed_hosts: set[str] | None = None,
+        article_path_patterns: tuple[re.Pattern[str], ...] = (),
+        default_nscrape_options: dict[str, object] | None = None,
+    ) -> None:
+        self.settings = settings
+        self.start_url = start_url
+        self.domain = domain
+        self.allowed_hosts = allowed_hosts or set()
+        self.article_path_patterns = article_path_patterns
+        self.default_nscrape_options = default_nscrape_options or {
             "transform": "basic",
             "pretty": True,
             "headers": "default",
         }
-    )
 
     @property
     def output_path(self):
