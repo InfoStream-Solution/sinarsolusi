@@ -89,8 +89,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.NEWS_SCRAPER_SSH_KEY }}" > ~/.ssh/news_scraper_ci_key
+          chmod 600 ~/.ssh/news_scraper_ci_key
+
+      - name: Trust server host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" "${{ secrets.NEWS_SCRAPER_HOST }}" >> ~/.ssh/known_hosts
+
       - name: Sync runtime scripts and cron intent
         run: |
+          export SSH_KEY="$HOME/.ssh/news_scraper_ci_key"
           bash "${GITHUB_WORKSPACE}/deploy/runtime/news_scraper.sync.sh" \
             "${{ secrets.NEWS_SCRAPER_HOST }}" \
             "${{ secrets.NEWS_SCRAPER_USER }}" \
