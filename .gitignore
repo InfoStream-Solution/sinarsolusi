@@ -152,6 +152,14 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+!deploy/
+!deploy/build/
+!deploy/build/**
+!deploy/runtime/
+!deploy/runtime/**
+!ops/
+!ops/cron/
+!ops/cron/**
 develop-eggs/
 dist/
 downloads/

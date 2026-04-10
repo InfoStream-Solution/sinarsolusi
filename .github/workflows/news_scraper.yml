@@ -62,27 +62,24 @@ jobs:
         run: echo "image_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Build image
-        working-directory: ${{ github.workspace }}
         run: |
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           IMAGE_TAG="${GITHUB_SHA}" \
-          ./deploy/build/news_scraper.build.sh
+          "${GITHUB_WORKSPACE}/deploy/build/news_scraper.build.sh"
 
       - name: Publish image
-        working-directory: ${{ github.workspace }}
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG="${GITHUB_SHA}" \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
-          ./deploy/build/news_scraper.publish.sh
+          "${GITHUB_WORKSPACE}/deploy/build/news_scraper.publish.sh"
 
       - name: Tag latest on main
-        working-directory: ${{ github.workspace }}
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG=latest \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
-          ./deploy/build/news_scraper.publish.sh
+          "${GITHUB_WORKSPACE}/deploy/build/news_scraper.publish.sh"
 
   sync_runtime:
     runs-on: ubuntu-latest
@@ -93,10 +90,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Sync runtime scripts and cron intent
-        working-directory: ${{ github.workspace }}
         run: |
-          chmod +x deploy/runtime/news_scraper.sync.sh
-          ./deploy/runtime/news_scraper.sync.sh \
+          "${GITHUB_WORKSPACE}/deploy/runtime/news_scraper.sync.sh" \
             "${{ secrets.NEWS_SCRAPER_HOST }}" \
             "${{ secrets.NEWS_SCRAPER_USER }}" \
             "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" \
