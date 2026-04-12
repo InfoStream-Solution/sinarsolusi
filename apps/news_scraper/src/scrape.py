@@ -84,7 +84,7 @@ def main() -> None:
             str(markdown_path),
         )
         print(json.dumps(payload, indent=2))
-    except Exception as exc:
+    except Exception:
         logger.exception("scrape_failed domain=%r article_url=%r", site.domain, article_url)
         raise
 
