@@ -2,14 +2,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-from .config import get_settings
-from .links import mark_link_scraped, read_links
-from .models import now_iso
-from .paths import error_log_path, links_jsonl_path
-from .site_loader import load_site
-from .utils import configure_logging, get_logger
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from src.config import get_settings
+    from src.links import read_links
+    from src.models import now_iso
+    from src.paths import error_log_path, links_jsonl_path
+    from src.site_loader import load_site
+    from src.utils import configure_logging, get_logger
+else:
+    from .config import get_settings
+    from .links import read_links
+    from .models import now_iso
+    from .paths import error_log_path, links_jsonl_path
+    from .site_loader import load_site
+    from .utils import configure_logging, get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -48,21 +58,22 @@ def main() -> None:
     logger = get_logger("extract-news")
     site = load_site(args.domain, settings=settings)
     links_path = links_jsonl_path(settings.links_dir, site.domain)
-    links = read_links(links_path)
     keep_scraped = (
         settings.keep_scraped if args.keep_scraped is None else args.keep_scraped
     )
 
-    pending_article_links = [
-        link for link in links if not link.scraped and site.is_article_url(link.url)
+    pending_article_urls = [
+        link.url
+        for link in read_links(links_path)
+        if site.is_article_url(link.url)
     ]
     if args.limit > 0:
-        pending_article_links = pending_article_links[: args.limit]
+        pending_article_urls = pending_article_urls[: args.limit]
     logger.info(
         "extract_news_start domain=%r links_path=%r pending_article_count=%d keep_scraped=%r",
         site.domain,
         str(links_path),
-        len(pending_article_links),
+        len(pending_article_urls),
         keep_scraped,
     )
 
@@ -71,12 +82,12 @@ def main() -> None:
     removed_scraped_files: list[str] = []
     error_path = error_log_path(settings.content_dir, site.domain, "extract-news")
     error_count = 0
-    for link in pending_article_links:
-        article_url = site.normalize_article_url(link.url)
+    for article_url in pending_article_urls:
+        article_url = site.normalize_article_url(article_url)
         logger.info(
             "article_process_start domain=%r original_url=%r article_url=%r",
             site.domain,
-            link.url,
+            article_url,
             article_url,
         )
         try:
@@ -95,11 +106,10 @@ def main() -> None:
                     article_url,
                     str(html_path),
                 )
-            mark_link_scraped(links_path, link.url)
             logger.info(
                 "article_process_done domain=%r original_url=%r article_url=%r json_path=%r markdown_path=%r",
                 site.domain,
-                link.url,
+                article_url,
                 article_url,
                 str(parsed_path),
                 str(markdown_path),
@@ -108,10 +118,12 @@ def main() -> None:
             written_markdown_files.append(str(markdown_path))
         except Exception as exc:
             error_count += 1
+            error_code = type(exc).__name__
+            error_message = str(exc)
             logger.exception(
                 "article_process_failed domain=%r original_url=%r article_url=%r",
                 site.domain,
-                link.url,
+                article_url,
                 article_url,
             )
             append_error_record(
@@ -120,17 +132,17 @@ def main() -> None:
                     "occurred_at": now_iso(),
                     "domain": site.domain,
                     "command": "extract-news",
-                    "original_url": link.url,
+                    "original_url": article_url,
                     "article_url": article_url,
-                    "error_type": type(exc).__name__,
-                    "error_message": str(exc),
+                    "error_type": error_code,
+                    "error_message": error_message,
                 },
             )
 
     payload = {
         "domain": site.domain,
         "links_input_path": str(links_path),
-        "article_count": len(pending_article_links),
+        "article_count": len(pending_article_urls),
         "written_files": written_files,
         "written_markdown_files": written_markdown_files,
         "keep_scraped": keep_scraped,
@@ -142,7 +154,7 @@ def main() -> None:
     logger.info(
         "extract_news_done domain=%r article_count=%d removed_scraped_count=%d error_count=%d",
         site.domain,
-        len(pending_article_links),
+        len(pending_article_urls),
         len(removed_scraped_files),
         error_count,
     )

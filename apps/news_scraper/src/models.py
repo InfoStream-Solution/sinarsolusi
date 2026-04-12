@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-import json
 
 
 @dataclass(frozen=True)
@@ -50,4 +50,6 @@ class ParsedContent:
 
 
 def now_iso() -> str:
+    """Return the current UTC time in ISO 8601 format."""
+
     return datetime.now(UTC).isoformat()

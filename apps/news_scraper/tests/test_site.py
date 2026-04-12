@@ -17,6 +17,7 @@ from src.site_loader import load_site
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(
+        store_database_url=f"sqlite:///{tmp_path / 'news_scraper.db'}",
         seed_dir=tmp_path / "seed",
         links_dir=tmp_path / "links",
         scraped_dir=tmp_path / "scraped",
@@ -138,7 +139,27 @@ def test_base_site_scrape_article_uses_normalized_url_and_output_path(
     assert str(options.output_path) == str(
         settings.scraped_dir / "example.com" / "article_html" / "deep-dive.html"
     )
-    assert captured["scraped"] is True
+
+
+def test_kompas_parser_skips_republished_notice(settings: Settings) -> None:
+    site = KompasComSite(settings)
+    html = """
+    <html>
+      <body>
+        <h1 class="read__title">Example Title</h1>
+        <div class="read__content">
+          <p>First paragraph.</p>
+          <p>Artikel ini sudah tayang di Kompas.com pada tanggal lain.</p>
+          <p>Second paragraph.</p>
+        </div>
+      </body>
+    </html>
+    """
+
+    article = site.parse_article(html, "https://www.kompas.com/read/2026/04/12/123456/example")
+
+    assert "Artikel ini sudah tayang di" not in article.content
+    assert article.content == "First paragraph.\n\nSecond paragraph."
 
 
 def test_kompas_site_matches_article_urls(settings: Settings) -> None:

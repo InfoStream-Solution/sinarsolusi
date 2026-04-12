@@ -446,10 +446,7 @@ So in containers you run commands like:
 
 ```bash
 docker run --rm \
-  -v /var/lib/sinarsolusi/seed:/data/seed \
-  -v /var/lib/sinarsolusi/links:/data/links \
-  -v /var/lib/sinarsolusi/scraped:/data/scraped \
-  -v /var/lib/sinarsolusi/content:/data/content \
+  -v /path/to/data:/data \
   news-scraper seed kompas.com
 ```
 
@@ -457,10 +454,7 @@ Or:
 
 ```bash
 docker run --rm \
-  -v /var/lib/sinarsolusi/seed:/data/seed \
-  -v /var/lib/sinarsolusi/links:/data/links \
-  -v /var/lib/sinarsolusi/scraped:/data/scraped \
-  -v /var/lib/sinarsolusi/content:/data/content \
+  -v /path/to/data:/data \
   news-scraper extract-news kompas.com
 ```
 

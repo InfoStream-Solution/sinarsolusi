@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from src.utils.logging import LogMixin, configure_logging, get_logger
+from src.utils.logging import BracketFormatter, LogMixin, configure_logging, get_logger
 
 
 def test_configure_logging_sets_level_without_duplicating_handlers() -> None:
@@ -45,3 +45,21 @@ def test_log_mixin_prefers_logger_name_property() -> None:
             return "demo.logger"
 
     assert Demo().logger.name == "demo.logger"
+
+
+def test_configure_logging_uses_bracketed_format() -> None:
+    record = logging.LogRecord(
+        name="demo.logger",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg="hello\nfield='value'",
+        args=(),
+        exc_info=None,
+    )
+
+    formatter = BracketFormatter()
+    assert formatter.format(record) == (
+        f"{formatter.formatTime(record, formatter.datefmt)} [INFO] [demo.logger] hello\n"
+        "  field='value'"
+    )
