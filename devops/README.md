@@ -14,8 +14,10 @@ This directory keeps deployment concerns separate from application source.
 - `devops/scripts/news_scraper.run.sh` is the runtime script that runs the already-published image with the server runtime stack.
   - With no arguments it defaults to `seed kompas.com`.
   - Pass `extract-news kompas.com` or another command to run a different pipeline step.
-- `devops/scripts/news_scraper.seed.kompas.sh` is the cron-friendly wrapper for the hourly Kompas seed job.
-  - It pulls the latest image, runs `seed kompas.com`, and appends output to `/var/log/news-scraper-seed.log`.
+- `devops/scripts/news_scraper.seed_all.sh` is the server cron wrapper for the seed job.
+  - It runs `seed` for `kompas.com`, `detik.com`, and `beritasatu.com` in sequence.
+  - It writes timestamped output to `/var/log/news-scraper-seed-all.log`.
+  - It must be executable on the server (`chmod +x`).
 - The runtime script defaults to `IMAGE_TAG=latest` and expects `ENV_FILE=/etc/news_scraper.env` unless overridden.
 - `devops/runtime/news_scraper.compose.yaml` is the source of truth for host mounts and container path mapping.
 - `devops/runtime/news_scraper.env.example` documents the server-side runtime flags that belong in `/etc/news_scraper.env`.
@@ -41,8 +43,9 @@ If you call `docker compose` directly, remember that `env_file` paths are resolv
 
 ## Scheduling
 
-- `devops/cron/news_scraper.seed.hourly` is the cron intent file for hourly seeding.
-- The cron entry calls the wrapper script, which handles pull, run, and logging.
+- `devops/cron/news_scraper.seed.hourly` is the cron intent file for scheduled seeding.
+- The current schedule is every 5 minutes.
+- The cron entry calls the wrapper script, which handles logging and per-domain execution.
 - The server-side Compose file owns the host-to-container mounts.
 
 ## Server Bootstrap
@@ -73,7 +76,7 @@ SOURCE_TAG=local-test PUBLISH_TAG=tagname IMAGE_NAME=ghcr.io/infostream-solution
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh extract-news kompas.com
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=../../.env.news_scraper docker compose -f devops/runtime/news_scraper.compose.yaml run --rm news-scraper seed kompas.com
-./devops/scripts/news_scraper.seed.kompas.sh
+./devops/scripts/news_scraper.seed_all.sh
 ```
 
 The server env file should stay runtime-only:
