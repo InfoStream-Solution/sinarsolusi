@@ -1,5 +1,4 @@
 */5 * * * * /usr/bin/flock -n /tmp/news-scraper-seed.lock
 /home/admin/sinarsolusi/devops/scripts/news_scraper.seed_all.sh
 
-*/5 * * * * /usr/bin/flock -n /tmp/news-scraper-seed.lock
-/home/admin/sinarsolusi/devops/scripts/news_scraper.seed_extract_all.sh
+*/5 * * * * /usr/bin/flock -n /tmp/news-scraper-seed.lock /home/admin/sinarsolusi/devops/scripts/news_scraper.seed_extract_all.sh
