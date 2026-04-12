@@ -9,6 +9,11 @@ IMAGE_NAME="${IMAGE_NAME:-ghcr.io/infostream-solution/sinarsolusi_news_scraper}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 ENV_FILE="${ENV_FILE:-/etc/news_scraper.env}"
 
+if [[ "${ENV_FILE}" == "/etc/news_scraper.env" && ! -f "${ENV_FILE}" ]]; then
+  printf 'missing required env file: %s\n' "${ENV_FILE}" >&2
+  exit 1
+fi
+
 if [[ $# -eq 0 ]]; then
   set -- seed kompas.com
 fi
