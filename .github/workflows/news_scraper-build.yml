@@ -62,18 +62,18 @@ jobs:
         run: |
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
           IMAGE_TAG="${GITHUB_SHA}" \
-          bash "${GITHUB_WORKSPACE}/deploy/scripts/news_scraper.build.sh"
+          bash "${GITHUB_WORKSPACE}/devops/scripts/news_scraper.build.sh"
 
       - name: Publish image tag
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG="${GITHUB_SHA}" \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
-          bash "${GITHUB_WORKSPACE}/deploy/scripts/news_scraper.publish.sh"
+          bash "${GITHUB_WORKSPACE}/devops/scripts/news_scraper.publish.sh"
 
       - name: Publish latest tag
         run: |
           SOURCE_TAG="${GITHUB_SHA}" \
           PUBLISH_TAG=latest \
           IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper \
-          bash "${GITHUB_WORKSPACE}/deploy/scripts/news_scraper.publish.sh"
+          bash "${GITHUB_WORKSPACE}/devops/scripts/news_scraper.publish.sh"
