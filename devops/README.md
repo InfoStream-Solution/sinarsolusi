@@ -18,6 +18,10 @@ This directory keeps deployment concerns separate from application source.
   - It runs `seed` for `kompas.com`, `detik.com`, and `beritasatu.com` in sequence.
   - It writes timestamped output to `/var/log/news-scraper-seed-all.log`.
   - It must be executable on the server (`chmod +x`).
+- `devops/scripts/news_scraper.seed_extract_all.sh` is the server cron wrapper for the combined seed + extract job.
+  - It runs `seed` and then `extract-news` for `kompas.com`, `detik.com`, and `beritasatu.com`.
+  - It writes timestamped output to `/var/log/news-scraper-seed-extract-all.log`.
+  - It must be executable on the server (`chmod +x`).
 - The runtime script defaults to `IMAGE_TAG=latest` and expects `ENV_FILE=/etc/news_scraper.env` unless overridden.
 - `devops/runtime/news_scraper.compose.yaml` is the source of truth for host mounts and container path mapping.
 - `devops/runtime/news_scraper.env.example` documents the server-side runtime flags that belong in `/etc/news_scraper.env`.
@@ -77,6 +81,7 @@ IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagnam
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh extract-news kompas.com
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=../../.env.news_scraper docker compose -f devops/runtime/news_scraper.compose.yaml run --rm news-scraper seed kompas.com
 ./devops/scripts/news_scraper.seed_all.sh
+./devops/scripts/news_scraper.seed_extract_all.sh
 ```
 
 The server env file should stay runtime-only:
