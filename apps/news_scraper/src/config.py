@@ -24,6 +24,8 @@ class Settings:
     links_dir: Path
     scraped_dir: Path
     content_dir: Path
+    kbt_api_base_url: str
+    kbt_api_token: str | None
     scraper_debug: bool
     keep_seed: bool
     keep_scraped: bool
@@ -57,6 +59,8 @@ def get_settings() -> Settings:
     raw_links_dir = os.environ.get("LINKS_DIR", "./links")
     raw_scraped_dir = os.environ.get("SCRAPED_DIR", "./scraped")
     raw_content_dir = os.environ.get("CONTENT_DIR", "./content")
+    kbt_api_base_url = os.environ.get("KBT_API_BASE_URL", "http://127.0.0.1:8000")
+    kbt_api_token = os.environ.get("KBT_API_TOKEN")
     scraper_debug = _parse_bool(os.environ.get("SCRAPER_DEBUG"), default=False)
     keep_seed = _parse_bool(os.environ.get("KEEP_SEED"), default=scraper_debug)
     keep_scraped = _parse_bool(
@@ -73,6 +77,8 @@ def get_settings() -> Settings:
         links_dir=links_dir,
         scraped_dir=scraped_dir,
         content_dir=content_dir,
+        kbt_api_base_url=kbt_api_base_url.rstrip("/"),
+        kbt_api_token=kbt_api_token,
         scraper_debug=scraper_debug,
         keep_seed=keep_seed,
         keep_scraped=keep_scraped,

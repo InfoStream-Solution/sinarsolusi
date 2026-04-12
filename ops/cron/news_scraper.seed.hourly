@@ -1,1 +1,0 @@
-0 * * * * cd /home/ubuntu/projects/sinarsolusi && IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=latest ./deploy/scripts/news_scraper.pull.sh && IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=latest ENV_FILE=/etc/news_scraper.env ./deploy/scripts/news_scraper.run.sh

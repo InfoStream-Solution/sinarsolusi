@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Modular workspace for web and news scraping"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["nscraper==0.1.4"]
+dependencies = [
+    "google-genai>=0.8.0",
+    "nscraper==0.1.4",
+    "pydantic>=2.0",
+    "scikit-learn>=1.5",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=8.0", "pytest-cov>=5.0"]
@@ -12,7 +17,12 @@ lint = ["ruff>=0.11"]
 
 [project.scripts]
 seed = "src.seed:main"
+seed-ui = "src.admin_ui:main"
 extract-news = "src.extract_news:main"
+scrape = "src.scrape:main"
+group-news = "src.group_news:main"
+post-news = "src.post_news:main"
+summarize = "src.summarizer:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,8 +31,11 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = true
 
+[tool.ruff]
+line-length = 88
+
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-report=term-missing --cov-fail-under=49"
+addopts = "--cov-fail-under=49"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

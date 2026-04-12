@@ -31,6 +31,14 @@ def parsed_articles_dir(content_dir: Path, domain: str) -> Path:
     return content_dir / "news_article" / domain
 
 
+def grouped_articles_dir(content_dir: Path, domain: str | None = None) -> Path:
+    return content_dir / "news_group"
+
+
+def grouped_articles_db_path(content_dir: Path, domain: str | None = None) -> Path:
+    return grouped_articles_dir(content_dir, domain) / "news_group.sqlite3"
+
+
 def scraped_articles_dir(scraped_dir: Path, domain: str) -> Path:
     return scraped_dir / domain / "article_html"
 
