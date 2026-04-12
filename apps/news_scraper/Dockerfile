@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.13-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -14,14 +14,11 @@ COPY src ./src
 RUN uv sync --frozen --no-dev
 
 
-FROM python:3.12-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    SEED_DIR=/data/seed \
-    LINKS_DIR=/data/links \
-    SCRAPED_DIR=/data/scraped \
-    CONTENT_DIR=/data/content
+    DATA_DIR=/data
 
 WORKDIR /app
 

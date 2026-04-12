@@ -63,6 +63,7 @@ class DummySite:
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(
+        store_database_url=f"sqlite:///{tmp_path / 'news_scraper.db'}",
         seed_dir=tmp_path / "seed",
         links_dir=tmp_path / "links",
         scraped_dir=tmp_path / "scraped",

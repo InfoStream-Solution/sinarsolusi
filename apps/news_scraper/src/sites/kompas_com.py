@@ -113,6 +113,8 @@ class KompasComSite(BaseSite):
             return True
         if text.startswith("Artikel ini pernah tayang"):
             return True
+        if "Artikel ini sudah tayang di" in text:
+            return True
         if "Gabung KOMPAS.com Plus sekarang" in text:
             return True
         if text == "Tim Redaksi":

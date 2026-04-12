@@ -48,6 +48,7 @@ def main() -> None:
     args = parser.parse_args()
 
     settings = get_settings()
+
     configure_logging(debug=settings.scraper_debug)
     logger = get_logger("seed")
     site = load_site(args.domain, settings=settings)
@@ -62,7 +63,9 @@ def main() -> None:
     )
     links = normalize_links(
         links,
-        lambda url: site.normalize_article_url(url) if site.is_article_url(url) else site.normalize_url(url),
+        lambda url: site.normalize_article_url(url)
+        if site.is_article_url(url)
+        else site.normalize_url(url),
     )
     links = [link for link in links if site.is_article_url(link.url)]
     links_path = links_jsonl_path(settings.links_dir, site.domain)
@@ -98,9 +101,7 @@ def main() -> None:
         removed_seed_file,
         len(links),
     )
-    print(json.dumps(payload, indent=2))
-    with open(payload.get("links_output_path"), "r") as f:
-        print(f.read())
+    logger.info(json.dumps(payload, indent=2))
 
 
 if __name__ == "__main__":

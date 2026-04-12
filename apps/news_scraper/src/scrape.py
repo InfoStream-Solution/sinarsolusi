@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 
 from .config import get_settings
 from .site_loader import load_site
@@ -27,7 +28,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Keep the intermediate scraped HTML file after parsing the article.",
     )
     return parser
+
 def main() -> None:
+
     parser = build_parser()
     args = parser.parse_args()
 
