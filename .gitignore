@@ -330,3 +330,4 @@ cython_debug/
 /apps/news_scraper/scripts/rebuild_and_select.sh
 /apps/news_scraper/scripts/
 /identifier.sqlite
+AGENTS.md
