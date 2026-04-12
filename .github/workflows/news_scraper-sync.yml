@@ -36,3 +36,4 @@ jobs:
           rsync -avz -e "ssh -i $HOME/.ssh/news_scraper_ci_key -p ${{ secrets.NEWS_SCRAPER_SSH_PORT }}" \
             "${GITHUB_WORKSPACE}/devops/" \
             "${{ secrets.NEWS_SCRAPER_USER }}@${{ secrets.NEWS_SCRAPER_HOST }}:${{ secrets.NEWS_SCRAPER_DEPLOY_DIR }}/devops/"
+          ssh -i "$HOME/.ssh/news_scraper_ci_key" -p "${{ secrets.NEWS_SCRAPER_SSH_PORT }}" "${{ secrets.NEWS_SCRAPER_USER }}@${{ secrets.NEWS_SCRAPER_HOST }}" "chmod +x '${{ secrets.NEWS_SCRAPER_DEPLOY_DIR }}/devops/scripts/news_scraper.seed_all.sh' '${{ secrets.NEWS_SCRAPER_DEPLOY_DIR }}/devops/scripts/news_scraper.seed_extract_all.sh'"
