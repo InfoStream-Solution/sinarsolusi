@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-news_scraper}
       POSTGRES_USER: ${DB_USER:-news_scraper}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-news_scraper}
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "${DB_PORT:-54320}:5432"
     volumes:
@@ -26,8 +26,8 @@ services:
 #      DB_PORT: 5432
 #      DB_NAME: ${DB_NAME:-news_scraper}
 #      DB_USER: ${DB_USER:-news_scraper}
-#      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
-#      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+#      DB_PASSWORD: ${DB_PASSWORD:-}
+#      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-}@postgres:5432/${DB_NAME:-news_scraper}
 #      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
 #      KEEP_SEED: ${KEEP_SEED:-0}
 #      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
