@@ -8,13 +8,21 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from src.config import get_settings
-    from src.links import extract_internal_links, normalize_links, write_links
+    from src.links import (
+        extract_internal_links,
+        normalize_links,
+        write_links,
+    )
     from src.paths import links_jsonl_path
     from src.site_loader import load_site
     from src.utils import configure_logging, get_logger
 else:
     from .config import get_settings
-    from .links import extract_internal_links, normalize_links, write_links
+    from .links import (
+        extract_internal_links,
+        normalize_links,
+        write_links,
+    )
     from .paths import links_jsonl_path
     from .site_loader import load_site
     from .utils import configure_logging, get_logger
@@ -43,6 +51,7 @@ def main() -> None:
     configure_logging(debug=settings.scraper_debug)
     logger = get_logger("seed")
     site = load_site(args.domain, settings=settings)
+
     logger.info("seed_start domain=%r start_url=%r", site.domain, site.start_url)
     scrape_result = site.scrape()
 
@@ -55,6 +64,7 @@ def main() -> None:
         links,
         lambda url: site.normalize_article_url(url) if site.is_article_url(url) else site.normalize_url(url),
     )
+    links = [link for link in links if site.is_article_url(link.url)]
     links_path = links_jsonl_path(settings.links_dir, site.domain)
     write_links(links_path, links)
     logger.info(
@@ -89,6 +99,8 @@ def main() -> None:
         len(links),
     )
     print(json.dumps(payload, indent=2))
+    with open(payload.get("links_output_path"), "r") as f:
+        print(f.read())
 
 
 if __name__ == "__main__":
