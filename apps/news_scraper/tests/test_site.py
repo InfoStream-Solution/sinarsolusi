@@ -56,8 +56,8 @@ def test_base_site_uses_instance_patterns(article_site: BaseSite) -> None:
 def test_base_site_builds_paths_and_options(base_site: BaseSite, settings: Settings) -> None:
     assert base_site.logger_name == "site.example.com"
     assert base_site.link_allowed_hosts == {"example.com"}
-    assert base_site.normalize_url("https://example.com/a#frag") == "https://example.com/a"
-    assert base_site.normalize_article_url("https://example.com/a#frag") == "https://example.com/a"
+    assert base_site.normalize_url("https://example.com/a#frag") == "https://example.com/a#frag"
+    assert base_site.normalize_article_url("https://example.com/a#frag") == "https://example.com/a#frag"
     assert base_site.article_slug("https://example.com/articles/deep-dive/") == "deep-dive"
     assert base_site.article_slug("https://example.com/") == "article"
     assert base_site.output_path == settings.seed_dir / "example.com.seed"
@@ -134,7 +134,7 @@ def test_base_site_scrape_article_uses_normalized_url_and_output_path(
     site.scrape_article("https://example.com/articles/deep-dive#frag")
 
     options = captured["options"]
-    assert options.url == "https://example.com/articles/deep-dive"
+    assert options.url == "https://example.com/articles/deep-dive#frag"
     assert str(options.output_path) == str(
         settings.scraped_dir / "example.com" / "article_html" / "deep-dive.html"
     )

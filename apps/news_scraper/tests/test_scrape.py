@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -87,8 +86,6 @@ def test_main_writes_same_output_location_as_extract_news(
     settings: Settings,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, object] = {}
-
     monkeypatch.setattr(scrape, "get_settings", lambda: settings)
     monkeypatch.setattr(scrape, "configure_logging", lambda debug: None)
     monkeypatch.setattr(scrape, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
