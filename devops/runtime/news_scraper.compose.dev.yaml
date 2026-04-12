@@ -1,0 +1,38 @@
+services:
+  postgres:
+    container_name: newscraper-postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-news_scraper}
+      POSTGRES_USER: ${DB_USER:-news_scraper}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-news_scraper}
+    ports:
+      - "${DB_PORT:-54320}:5432"
+    volumes:
+      - ${POSTGRES_DATA_DIR:-../../apps/news_scraper/.data/postgres}:/var/lib/postgresql/data
+
+#  news-scraper:
+#    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+#    depends_on:
+#      - postgres
+#    env_file:
+#      - ${ENV_FILE:-../../apps/news_scraper/.env}
+#    environment:
+#      SEED_DIR: /data/seed
+#      LINKS_DIR: /data/links
+#      SCRAPED_DIR: /data/scraped
+#      CONTENT_DIR: /data/content
+#      DB_HOST: postgres
+#      DB_PORT: 5432
+#      DB_NAME: ${DB_NAME:-news_scraper}
+#      DB_USER: ${DB_USER:-news_scraper}
+#      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
+#      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+#      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
+#      KEEP_SEED: ${KEEP_SEED:-0}
+#      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
+#    volumes:
+#      - ${HOST_SEED_DIR:-../../apps/news_scraper/.data/seed}:/data/seed
+#      - ${HOST_LINKS_DIR:-../../apps/news_scraper/.data/links}:/data/links
+#      - ${HOST_SCRAPED_DIR:-../../apps/news_scraper/.data/scraped}:/data/scraped
+#      - ${HOST_CONTENT_DIR:-../../apps/news_scraper/.data/content}:/data/content
