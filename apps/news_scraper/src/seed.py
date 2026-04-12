@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+from pathlib import Path
 
-from .config import get_settings
-from .links import extract_internal_links, normalize_links, write_links
-from .paths import links_jsonl_path
-from .site_loader import load_site
-from .utils import configure_logging, get_logger
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from src.config import get_settings
+    from src.links import extract_internal_links, normalize_links, write_links
+    from src.paths import links_jsonl_path
+    from src.site_loader import load_site
+    from src.utils import configure_logging, get_logger
+else:
+    from .config import get_settings
+    from .links import extract_internal_links, normalize_links, write_links
+    from .paths import links_jsonl_path
+    from .site_loader import load_site
+    from .utils import configure_logging, get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:

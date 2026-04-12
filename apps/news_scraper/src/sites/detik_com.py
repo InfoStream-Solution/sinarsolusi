@@ -6,40 +6,46 @@ from urllib.parse import parse_qsl, urlencode, urlparse
 
 import justhtml
 
-from ..models import ParsedContent
 from ..config import Settings
-
+from ..models import ParsedContent
 from .base import BaseSite
 
 
 ARTICLE_PATH_PATTERNS = (
-    re.compile(r"^/[^/]+/read/\d{4}/\d{2}/\d{2}/\d+/[^/]+$"),
-    re.compile(r"^/read/\d{4}/\d{2}/\d{2}/\d+/[^/]+$"),
+    re.compile(r"^/[^/]+/(?:berita|edu|jabar|jateng|jatim|jogja|oto|sport|travel|food|health|finance|hot|inet|wolipop)/d-\d+/.+$"),
+    re.compile(r"^/(?:berita|edu|jabar|jateng|jatim|jogja|oto|sport|travel|food|health|finance|hot|inet|wolipop)/d-\d+/.+$"),
 )
 WHITESPACE_PATTERN = re.compile(r"\s+")
 
 
 @dataclass
-class KompasComSite(BaseSite):
+class DetikComSite(BaseSite):
     settings: Settings
 
     def __init__(self, settings: Settings) -> None:
         super().__init__(
             settings=settings,
-            domain="kompas.com",
-            start_url="https://kompas.com",
+            domain="detik.com",
+            start_url="https://detik.com",
             allowed_hosts={
-                "kompas.com",
-                "www.kompas.com",
-                "news.kompas.com",
-                "tekno.kompas.com",
-                "otomotif.kompas.com",
-                "bola.kompas.com",
-                "money.kompas.com",
-                "news.kompas.com",
-                "edukasi.kompas.com",
-                "megapolitan.kompas.com",
-                "nasional.kompas.com"
+                "detik.com",
+                "www.detik.com",
+                "news.detik.com",
+                "finance.detik.com",
+                "inet.detik.com",
+                "hot.detik.com",
+                "sport.detik.com",
+                "oto.detik.com",
+                "travel.detik.com",
+                "food.detik.com",
+                "health.detik.com",
+                "wolipop.detik.com",
+                "edukasi.detik.com",
+                "jabar.detik.com",
+                "jateng.detik.com",
+                "jatim.detik.com",
+                "jogja.detik.com",
+                "detik.com",
             },
             article_path_patterns=ARTICLE_PATH_PATTERNS,
         )
@@ -52,8 +58,7 @@ class KompasComSite(BaseSite):
             return ""
         to_text = getattr(node, "to_text", None)
         if callable(to_text):
-            text = to_text(separator=" ", separator_blocks_only=True)
-            return self._clean_text(text)
+            return self._clean_text(to_text(separator=" ", separator_blocks_only=True))
         return ""
 
     def normalize_article_url(self, url: str) -> str:
@@ -62,7 +67,7 @@ class KompasComSite(BaseSite):
         query_items = [
             (key, value)
             for key, value in parse_qsl(parsed.query, keep_blank_values=True)
-            if key == "page"
+            if key in {"page"}
         ]
         if ("page", "all") not in query_items:
             query_items = [("page", "all")]
@@ -73,64 +78,44 @@ class KompasComSite(BaseSite):
         return justhtml.JustHTML(html).root
 
     def _extract_title(self, root: justhtml.Document, url: str) -> str:
-        title = self._node_text(root.query_one("h1.read__title"))
+        title = self._node_text(root.query_one("h1.detail__title"))
         if title:
             return title
         return self.article_slug(url).replace("-", " ")
 
     def _extract_category(self, root: justhtml.Document) -> str | None:
-        breadcrumbs = [self._node_text(node) for node in root.query("div.breadcrumb li a.breadcrumb__link")]
-        breadcrumbs = [item for item in breadcrumbs if item]
-        if len(breadcrumbs) >= 2:
-            return breadcrumbs[-1]
-        return None
+        breadcrumb = self._node_text(root.query_one("a.breadcrumb__link"))
+        return breadcrumb or None
 
     def _extract_published_at(self, root: justhtml.Document) -> str | None:
-        rendered = self._node_text(root.query_one("div.read__time"))
-        if not rendered:
-            return None
-        if "," in rendered:
-            _, published_at = rendered.split(",", 1)
-            return published_at.strip()
-        return rendered or None
-
-    def _extract_author(self, root: justhtml.Document) -> str | None:
-        role = self._node_text(root.query_one(".credit-title p")).lower()
-        if role == "penulis":
-            name = self._node_text(root.query_one(".credit-title-nameEditor"))
-            if name:
-                return name
+        candidates = [
+            "div.detail__date",
+            "div.detail__date-time",
+            "div.detail__dateinfo",
+            "div.detail__date__wrap",
+        ]
+        for selector in candidates:
+            rendered = self._node_text(root.query_one(selector))
+            if rendered:
+                return rendered
         return None
 
-    def _should_skip_item(self, text: str) -> bool:
-        if not text:
-            return True
-        if text.startswith("Penulis:"):
-            return True
-        if text.startswith("( Sumber:") or text.startswith("(Sumber:"):
-            return True
-        if text.startswith("Baca juga:"):
-            return True
-        if text.startswith("Artikel ini pernah tayang"):
-            return True
-        if "Gabung KOMPAS.com Plus sekarang" in text:
-            return True
-        if text == "Tim Redaksi":
-            return True
-        if text.startswith("Copyright "):
-            return True
-        return False
-
-    def _normalize_content_items(self, items: list[str]) -> list[str]:
-        if not items:
-            return items
-        first = items[0]
-        if first.startswith("KOMPAS.com - "):
-            items[0] = first.removeprefix("KOMPAS.com - ").strip()
-        return items
+    def _extract_author(self, root: justhtml.Document) -> str | None:
+        candidates = [
+            "div.detail__author",
+            "div.detail__author a",
+            "span.detail__author",
+        ]
+        for selector in candidates:
+            author = self._node_text(root.query_one(selector))
+            if author:
+                return author
+        return None
 
     def _extract_content_items(self, root: justhtml.Document) -> list[str]:
-        content_root = root.query_one("div.read__content")
+        content_root = root.query_one("div.detail__body-text")
+        if content_root is None:
+            content_root = root.query_one("div.itp_bodycontent")
         if content_root is None:
             return []
 
@@ -143,15 +128,23 @@ class KompasComSite(BaseSite):
                 stack.extend(reversed(children))
 
             node_name = getattr(node, "name", None)
-            if node_name not in {"p", "h2", "h3"}:
+            if node_name not in {"p", "h2", "h3", "li"}:
                 continue
 
             text = self._node_text(node)
-            if self._should_skip_item(text):
+            if not text:
+                continue
+            if text.startswith("Baca juga:"):
+                continue
+            if text.startswith("ADVERTISEMENT"):
+                continue
+            if text.startswith("SCROLL TO CONTINUE"):
+                continue
+            if text.startswith("Simak juga"):
                 continue
             items.append(text)
 
-        return self._normalize_content_items(items)
+        return items
 
     def parse_article(self, html: str, url: str) -> ParsedContent:
         root = self._parse_document(html)

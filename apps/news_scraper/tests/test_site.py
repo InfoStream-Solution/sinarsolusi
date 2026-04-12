@@ -8,7 +8,10 @@ import pytest
 import src.sites.base as base_module
 from src.config import Settings
 from src.sites.base import BaseSite
+from src.sites.beritasatu_com import BeritasatuComSite
+from src.sites.detik_com import DetikComSite
 from src.sites.kompas_com import KompasComSite
+from src.site_loader import load_site
 
 
 @pytest.fixture
@@ -18,6 +21,8 @@ def settings(tmp_path: Path) -> Settings:
         links_dir=tmp_path / "links",
         scraped_dir=tmp_path / "scraped",
         content_dir=tmp_path / "content",
+        kbt_api_base_url="http://127.0.0.1:8000",
+        kbt_api_token="token",
         scraper_debug=False,
         keep_seed=False,
         keep_scraped=False,
@@ -140,4 +145,128 @@ def test_kompas_site_matches_article_urls(settings: Settings) -> None:
     site = KompasComSite(settings)
 
     assert site.is_article_url("https://www.kompas.com/tekno/read/2024/01/01/123456789/example")
+    assert site.is_article_url(
+        "https://nasional.kompas.com/read/2026/04/11/13541301/kenakan-beskap-dan-peci-hitam-prabowo-hadiri-munas-xvi-pb-ipsi"
+    )
+    assert site.normalize_article_url(
+        "https://nasional.kompas.com/read/2026/04/11/13541301/kenakan-beskap-dan-peci-hitam-prabowo-hadiri-munas-xvi-pb-ipsi?utm_source=x&foo=bar"
+    ) == (
+        "https://nasional.kompas.com/read/2026/04/11/13541301/kenakan-beskap-dan-peci-hitam-prabowo-hadiri-munas-xvi-pb-ipsi?page=all"
+    )
     assert not site.is_article_url("https://www.kompas.com/")
+
+
+def test_detik_site_matches_article_urls(settings: Settings) -> None:
+    site = DetikComSite(settings)
+
+    assert site.is_article_url(
+        "https://www.detik.com/jateng/berita/d-8383892/stok-rudal-as-mulai-menipis-gegara-terus-bombardir-iran"
+    )
+    assert site.is_article_url(
+        "https://news.detik.com/berita/d-8439527/prabowo-hadiri-munas-xvi-pb-ipsi-2026-di-jcc"
+    )
+    assert site.normalize_article_url(
+        "https://www.detik.com/jateng/berita/d-8383892/stok-rudal-as-mulai-menipis-gegara-terus-bombardir-iran?utm_source=x&foo=bar"
+    ) == (
+        "https://www.detik.com/jateng/berita/d-8383892/stok-rudal-as-mulai-menipis-gegara-terus-bombardir-iran?page=all"
+    )
+    assert not site.is_article_url("https://www.detik.com/")
+
+
+def test_detik_site_parses_article_html(settings: Settings) -> None:
+    site = DetikComSite(settings)
+    html = """
+    <html>
+      <body>
+        <h1 class="detail__title">Prabowo Hadiri Munas XVI PB IPSI 2026 di JCC</h1>
+        <div class="detail__author">Tim detikNews</div>
+        <div class="detail__date">Jumat, 11 Apr 2026 14:05 WIB</div>
+        <div class="detail__body-text itp_bodycontent">
+          <p>Lead paragraph.</p>
+          <p>ADVERTISEMENT</p>
+          <p>Second paragraph.</p>
+          <p>Baca juga: ignored</p>
+        </div>
+      </body>
+    </html>
+    """
+
+    article = site.parse_article(html, "https://news.detik.com/berita/d-1/example")
+
+    assert article.title == "Prabowo Hadiri Munas XVI PB IPSI 2026 di JCC"
+    assert article.author == "Tim detikNews"
+    assert article.published_at == "Jumat, 11 Apr 2026 14:05 WIB"
+    assert article.summary == "Lead paragraph."
+    assert article.content == "Lead paragraph.\n\nSecond paragraph."
+
+
+def test_beritasatu_site_matches_article_urls(settings: Settings) -> None:
+    site = BeritasatuComSite(settings)
+
+    assert site.is_article_url(
+        "https://www.beritasatu.com/sport/2984172/dihadiri-prabowo-munas-ipsi-2026-jadi-momentum-konsolidasi-nasional"
+    )
+    assert site.normalize_article_url(
+        "https://www.beritasatu.com/sport/2984172/dihadiri-prabowo-munas-ipsi-2026-jadi-momentum-konsolidasi-nasional?utm_source=x&foo=bar"
+    ) == (
+        "https://www.beritasatu.com/sport/2984172/dihadiri-prabowo-munas-ipsi-2026-jadi-momentum-konsolidasi-nasional?page=all"
+    )
+    assert not site.is_article_url("https://www.beritasatu.com/")
+
+
+def test_beritasatu_site_parses_article_html(settings: Settings) -> None:
+    site = BeritasatuComSite(settings)
+    html = """
+    <html>
+      <body>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="https://www.beritasatu.com">Home</a></li>
+          <li class="breadcrumb-item active"><a href="https://www.beritasatu.com/sport">Sport</a></li>
+        </ol>
+        <h1 class="fw-bold b1-text-navy">Dihadiri Prabowo, Munas IPSI 2026 Jadi Momentum Konsolidasi Nasional</h1>
+        <small class="text-muted">Sabtu, 11 April 2026 | 13:15 WIB</small>
+        <div class="my-auto small">Penulis: <b><a href="https://www.beritasatu.com/penulis/theressia-sunday-silalahi">Theressia Sunday Silalahi</a></b> | Editor: <a href="https://www.beritasatu.com/editor/herman"><b>HE</b></a></div>
+        <div class="row mt-3">
+          <div class="col b1-article body-content">
+            <p><strong>Jakarta, Beritasatu.com –</strong>Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI.</p>
+            <div class="b1-group mb-3 position-relative">
+              <p class="h6 mb-1 b1-text-navy">BACA JUGA</p>
+              <h2 class="h6 fw-bold">
+                <a class="text-dark stretched-link" href="https://www.beritasatu.com/sport/2984071/prabowo-akan-buka-munas-ipsi-2026?utm_source=beritasatu&amp;utm_medium=baca_juga&amp;utm_campaign=prabowo-akan-buka-munas-ipsi-2026">Prabowo Akan Buka Munas IPSI 2026</a>
+              </h2>
+            </div>
+            <p>ADVERTISEMENT</p>
+            <p>Munas IPSI 2026 menjadi agenda penting.</p>
+            <div style="margin-top:50px;">
+              <a href="https://www.beritasatu.com/tag/munas-ipsi-2026"><h3 class="badge fs-tag bg-light px-2 py-1 mb-1 me-2 text-dark" style="font-size:.9rem !important; font-weight:900">Munas IPSI 2026</h3></a>
+              <a href="https://www.beritasatu.com/tag/prabowo-subianto"><h3 class="badge fs-tag bg-light px-2 py-1 mb-1 me-2 text-dark" style="font-size:.9rem !important; font-weight:900">Prabowo Subianto</h3></a>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+    article = site.parse_article(
+        html,
+        "https://www.beritasatu.com/sport/2984172/dihadiri-prabowo-munas-ipsi-2026-jadi-momentum-konsolidasi-nasional",
+    )
+
+    assert article.title == "Dihadiri Prabowo, Munas IPSI 2026 Jadi Momentum Konsolidasi Nasional"
+    assert article.category == "Sport"
+    assert article.published_at == "Sabtu, 11 April 2026 | 13:15 WIB"
+    assert article.author == "Theressia Sunday Silalahi"
+    assert article.summary == "Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI."
+    assert article.content == (
+        "Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI.\n\n"
+        "Munas IPSI 2026 menjadi agenda penting."
+    )
+    assert "Prabowo Akan Buka Munas IPSI 2026" not in article.content
+    assert "Munas IPSI 2026\nPrabowo Subianto" not in article.content
+
+
+def test_site_loader_resolves_beritasatu(settings: Settings) -> None:
+    site = load_site("beritasatu.com", settings)
+
+    assert isinstance(site, BeritasatuComSite)
+    assert site.start_url == "https://www.beritasatu.com"

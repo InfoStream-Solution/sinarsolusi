@@ -4,16 +4,24 @@
 
 Current supported site:
 - `kompas.com`
+- `detik.com`
+- `beritasatu.com`
 
 Current workflow:
 1. `seed` fetches the site entry page and builds a normalized internal-link queue.
 2. `extract-news` reads that queue, keeps only article URLs, scrapes each article, and writes parsed output.
+3. `scrape` fetches and parses one article URL directly.
+4. `group-news` loads all extracted articles, groups similar stories, and writes a local SQLite index with `group_id`.
+5. `post-news` reads parsed article JSON and posts it to the KBT API.
 
 This app is intentionally small and site-driven:
-- site behavior lives under [`src/sites`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites)
-- generic pipeline behavior lives under [`src/seed.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/seed.py) and [`src/extract_news.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/extract_news.py)
+- site behavior lives under [`src/sites`](src/sites)
+- generic pipeline behavior lives under [`src/seed.py`](src/seed.py) and [`src/extract_news.py`](src/extract_news.py)
+- single-article scraping lives under [`src/scrape.py`](src/scrape.py)
 - raw fetches are done through `nscraper`
 - Kompas article parsing currently uses `justhtml` against `nscraper` output with `transform="basic"`
+- Detik article parsing currently uses `justhtml` against standard detik article pages
+- BeritaSatu article parsing currently uses `justhtml` against standard BeritaSatu article pages
 
 ## Layout
 
@@ -29,9 +37,13 @@ apps/news_scraper/
     ├── models.py
     ├── paths.py
     ├── seed.py
+    ├── scrape.py
+    ├── group_news.py
     ├── site_loader.py
     ├── sites/
     │   ├── base.py
+    │   ├── beritasatu_com.py
+    │   ├── detik_com.py
     │   └── kompas_com.py
     └── utils/
         └── logging.py
@@ -55,6 +67,8 @@ CONTENT_DIR=.data/content
 SCRAPER_DEBUG=0
 KEEP_SEED=0
 KEEP_SCRAPED=0
+KBT_API_BASE_URL=http://127.0.0.1:8000
+KBT_API_TOKEN=your-token-here
 ```
 
 Important split:
@@ -70,6 +84,10 @@ CLI flags override env:
 - `--keep-seed` / `--no-keep-seed`
 - `--keep-scraped` / `--no-keep-scraped`
 
+KBT posting uses:
+- `KBT_API_BASE_URL` for the API root
+- `KBT_API_TOKEN` for `Authorization: Token ...`
+
 ## Commands
 
 Current entrypoints:
@@ -77,6 +95,16 @@ Current entrypoints:
 ```bash
 uv run seed kompas.com
 uv run extract-news kompas.com
+uv run scrape kompas.com -u https://nasional.kompas.com/read/2026/04/11/13541301/kenakan-beskap-dan-peci-hitam-prabowo-hadiri-munas-xvi-pb-ipsi
+uv run group-news kompas.com
+uv run post-news kompas.com
+uv run post-news --dry-run kompas.com
+```
+
+Rebuild and inspect grouped articles in one step:
+
+```bash
+bash scripts/rebuild_and_select.sh kompas.com
 ```
 
 Tests:
@@ -93,9 +121,26 @@ uv sync --extra lint
 uv run ruff check .
 ```
 
-There is no standalone `scrape` command anymore. The intended pipeline is:
+The intended pipeline is:
 1. seed
 2. extract-news
+3. scrape
+4. group-news
+5. post-news
+
+Dry run mode validates the outbound payloads without calling the API or writing
+posted markers.
+
+Single article output uses the same location as `extract-news`.
+
+Grouping output is stored at:
+
+```text
+CONTENT_DIR/news_group/news_group.sqlite3
+```
+
+Each grouped article keeps a persistent `group_id` for downstream topic
+transformation work.
 
 ## Seed
 
@@ -104,7 +149,7 @@ uv run seed kompas.com
 ```
 
 What `seed` does:
-- loads the site class through [`site_loader.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/site_loader.py)
+- loads the site class through [`site_loader.py`](src/site_loader.py)
 - runs `nscraper` against the site `start_url`
 - writes the fetched seed content to:
 
@@ -231,7 +276,7 @@ Example parsed JSON shape:
 
 ## Site Model
 
-Each supported site extends [`BaseSite`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites/base.py).
+Each supported site extends [`BaseSite`](src/sites/base.py).
 
 `BaseSite` currently provides:
 - `domain`
@@ -253,7 +298,9 @@ The site class owns:
 - how article HTML is parsed and cleaned
 
 Current Kompas implementation:
-- [`KompasComSite`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites/kompas_com.py)
+- [`KompasComSite`](src/sites/kompas_com.py)
+- [`DetikComSite`](src/sites/detik_com.py)
+- [`BeritasatuComSite`](src/sites/beritasatu_com.py)
 
 Kompas-specific behavior currently includes:
 - canonicalizing article URLs to `?page=all`
@@ -267,12 +314,12 @@ Kompas-specific behavior currently includes:
 
 ## Add A Site
 
-To add another site, create a new site class under [`src/sites`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites).
+To add another site, create a new site class under [`src/sites`](src/sites).
 
 Minimum steps:
 1. Add a new file such as:
-   - [`src/sites/example_com.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites)
-2. Create a class extending [`BaseSite`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites/base.py)
+   - [`src/sites/example_com.py`](src/sites/example_com.py)
+2. Create a class extending [`BaseSite`](src/sites/base.py)
 3. Define:
    - `domain`
    - `start_url`
@@ -280,7 +327,7 @@ Minimum steps:
    - `article_path_patterns`
 4. Implement:
    - `parse_article(html, url)`
-5. Make sure the loader can resolve the new domain through [`site_loader.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/site_loader.py)
+5. Make sure the loader can resolve the new domain through [`site_loader.py`](src/site_loader.py)
 
 Typical responsibilities for a site class:
 - identify which links are internal
@@ -417,7 +464,7 @@ docker run --rm \
   news-scraper extract-news kompas.com
 ```
 
-Use this section for local container smoke tests. For deploy/runtime and Compose-based server runs, see [`deploy/README.md`](/home/ubuntu/projects/sinarsolusi/deploy/README.md).
+Use this section for local container smoke tests. For devops/runtime and Compose-based server runs, see [`devops/README.md`](../../devops/README.md).
 
 ## Troubleshooting
 
@@ -426,7 +473,7 @@ Common issues and fixes:
 ### Parser still includes noise
 
 If article content still includes unwanted lines for Kompas:
-- update [`src/sites/kompas_com.py`](/home/ubuntu/projects/sinarsolusi/apps/news_scraper/src/sites/kompas_com.py)
+- update [`src/sites/kompas_com.py`](src/sites/kompas_com.py)
 - tighten the cleanup rules in the site parser
 - rerun:
 
@@ -454,7 +501,7 @@ For local `uv run` development, check `.env` for:
 - `SCRAPED_DIR`
 - `CONTENT_DIR`
 
-For containerized runs, check `deploy/runtime/news_scraper.compose.yaml` and the host mount paths used by the runtime scripts.
+For containerized runs, check `devops/runtime/news_scraper.compose.yaml` and the host mount paths used by the runtime scripts.
 
 ### Queue contains article variants or tracking params
 

@@ -323,7 +323,10 @@ cython_debug/
 /apps/news_scraper/scraped/
 !apps/website/src/lib/
 !apps/website/src/lib/**
-AGENTS.md
+
 /next
 /apps/news_scraper/.scraped/
 /apps/news_scraper/.data/
+/apps/news_scraper/scripts/rebuild_and_select.sh
+/apps/news_scraper/scripts/
+/identifier.sqlite

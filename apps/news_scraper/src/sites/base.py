@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from ..config import Settings
 from ..models import ParsedContent, now_iso
 from ..paths import parsed_articles_dir, scraped_articles_dir, seed_file_path
-from ..utils import LogMixin
+from ..utils import LogMixin, remove_utm_query_params
 
 
 DEFAULT_HEADERS = {
@@ -96,8 +96,7 @@ class BaseSite(LogMixin):
         return any(pattern.match(parsed.path) for pattern in self.article_path_patterns)
 
     def normalize_url(self, url: str) -> str:
-        parsed = urlparse(url)
-        return parsed._replace(fragment="").geturl()
+        return remove_utm_query_params(url)
 
     def normalize_article_url(self, url: str) -> str:
         return self.normalize_url(url)
