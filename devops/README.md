@@ -5,8 +5,8 @@ This directory keeps deployment concerns separate from application source.
 ## Image Flow
 
 - Image target: `ghcr.io/infostream-solution/sinarsolusi_news_scraper`
-- `devops/scripts/news_scraper.build.sh` is the build script for the scraper image.
 - `devops/scripts/news_scraper.publish.sh` is the publish script that tags and pushes the built image to GHCR.
+- `apps/news_scraper/scripts/build_image.sh` is the developer build script for the scraper image, using the app-local Dockerfile at `apps/news_scraper/Dockerfile`.
 
 ## Runtime
 
@@ -24,6 +24,7 @@ This directory keeps deployment concerns separate from application source.
   - It must be executable on the server (`chmod +x`).
 - The runtime script defaults to `IMAGE_TAG=latest` and expects `ENV_FILE=/etc/news_scraper.env` unless overridden.
 - `devops/runtime/news_scraper.compose.yaml` is the source of truth for host mounts and container path mapping.
+- `apps/news_scraper/compose.dev.yaml` is the app-local development stack for local Postgres, Redis, web, worker, and beat containers.
 - `devops/runtime/news_scraper.env.example` documents the server-side runtime flags that belong in `/etc/news_scraper.env`.
 
 ## Local vs Server
@@ -75,7 +76,7 @@ If you use a different deploy user or data root, override `DEPLOY_USER` and `DAT
 ## Example Commands
 
 ```bash
-IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=local-test ./devops/scripts/news_scraper.build.sh
+cd apps/news_scraper && IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=local-test bash ./scripts/build_image.sh
 SOURCE_TAG=local-test PUBLISH_TAG=tagname IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper ./devops/scripts/news_scraper.publish.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh extract-news kompas.com

@@ -5,11 +5,11 @@ from types import SimpleNamespace
 
 import pytest
 
-import src.extract_news as extract_news
-import src.seed as seed
-from src.config import Settings
-from src.links import read_links
-from src.models import ParsedContent
+import news_scraper_core.extract_news as extract_news
+import news_scraper_core.seed as seed
+from news_scraper_core.config import Settings
+from news_scraper_core.links import read_links
+from news_scraper_core.models import ParsedContent
 
 
 class DummySeedSite:
@@ -79,6 +79,11 @@ class DummyExtractSite(DummySeedSite):
         output_path.write_text(article.to_json(), encoding="utf-8")
         output_path.with_suffix(".md").write_text(article.to_markdown(), encoding="utf-8")
         return output_path
+
+    def article_output_path(self, url: str) -> Path:
+        return self.settings.content_dir / "news_article" / self.domain / (
+            f"{url.rsplit('/', 1)[-1]}.json"
+        )
 
     def scraped_article_dir(self) -> Path:
         return self.settings.scraped_dir / self.domain / "article_html"
@@ -162,3 +167,44 @@ def test_extract_news_updates_meta_on_success_and_failure(
     assert (settings.content_dir / "news_article" / "example.com" / "a.json").exists()
     assert (settings.content_dir / "news_article" / "example.com" / "a.md").exists()
     assert (settings.content_dir / "errors" / "example.com" / "extract-news.jsonl").exists()
+
+
+def test_extract_news_skips_existing_parsed_articles(
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class SkipOnScrapeSite(DummyExtractSite):
+        def scrape_article(self, url: str) -> None:
+            raise AssertionError("scrape_article should not be called for existing output")
+
+    monkeypatch.setattr(extract_news, "get_settings", lambda: settings)
+    monkeypatch.setattr(extract_news, "configure_logging", lambda debug: None)
+    monkeypatch.setattr(extract_news, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
+    monkeypatch.setattr(extract_news, "load_site", lambda domain, settings: SkipOnScrapeSite(settings))
+    monkeypatch.setattr(
+        extract_news,
+        "build_parser",
+        lambda: SimpleNamespace(parse_args=lambda: SimpleNamespace(domain="example.com", limit=0, keep_scraped=True)),
+    )
+
+    existing_json = settings.content_dir / "news_article" / "example.com" / "a.json"
+    existing_json.parent.mkdir(parents=True, exist_ok=True)
+    existing_json.write_text("{}", encoding="utf-8")
+    existing_json.with_suffix(".md").write_text("# existing", encoding="utf-8")
+
+    links_path = settings.links_dir / "example.com.jsonl"
+    links_path.parent.mkdir(parents=True, exist_ok=True)
+    links_path.write_text(
+        "\n".join(
+            [
+                '{"url":"https://example.com/news/a","discovered_at":"2026-04-11T00:00:00+07:00"}',
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    extract_news.main()
+
+    assert existing_json.exists()
+    assert existing_json.with_suffix(".md").exists()

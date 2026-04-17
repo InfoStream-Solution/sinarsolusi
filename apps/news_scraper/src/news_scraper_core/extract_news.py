@@ -7,12 +7,12 @@ from pathlib import Path
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from src.config import get_settings
-    from src.links import read_links
-    from src.models import now_iso
-    from src.paths import error_log_path, links_jsonl_path
-    from src.site_loader import load_site
-    from src.utils import configure_logging, get_logger
+    from news_scraper_core.config import get_settings
+    from news_scraper_core.links import read_links
+    from news_scraper_core.models import now_iso
+    from news_scraper_core.paths import error_log_path, links_jsonl_path
+    from news_scraper_core.site_loader import load_site
+    from news_scraper_core.utils import configure_logging, get_logger
 else:
     from .config import get_settings
     from .links import read_links
@@ -49,9 +49,9 @@ def append_error_record(path: Path, record: dict[str, object]) -> None:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args((argv or sys.argv)[1:])
 
     settings = get_settings()
     configure_logging(debug=settings.scraper_debug)
@@ -79,15 +79,30 @@ def main() -> None:
 
     written_files: list[str] = []
     written_markdown_files: list[str] = []
+    skipped_existing_files: list[str] = []
     removed_scraped_files: list[str] = []
     error_path = error_log_path(settings.content_dir, site.domain, "extract-news")
     error_count = 0
     for article_url in pending_article_urls:
+        original_url = article_url
         article_url = site.normalize_article_url(article_url)
+        parsed_path = site.article_output_path(article_url)
+        markdown_path = site.article_markdown_output_path(article_url)
+        if parsed_path.exists() and markdown_path.exists():
+            skipped_existing_files.append(str(parsed_path))
+            logger.info(
+                "article_process_skipped_existing domain=%r original_url=%r article_url=%r json_path=%r markdown_path=%r",
+                site.domain,
+                original_url,
+                article_url,
+                str(parsed_path),
+                str(markdown_path),
+            )
+            continue
         logger.info(
             "article_process_start domain=%r original_url=%r article_url=%r",
             site.domain,
-            article_url,
+            original_url,
             article_url,
         )
         try:
@@ -143,8 +158,10 @@ def main() -> None:
         "domain": site.domain,
         "links_input_path": str(links_path),
         "article_count": len(pending_article_urls),
+        "skipped_existing_count": len(skipped_existing_files),
         "written_files": written_files,
         "written_markdown_files": written_markdown_files,
+        "skipped_existing_files": skipped_existing_files,
         "keep_scraped": keep_scraped,
         "removed_scraped_files": removed_scraped_files,
         "scraped_article_dir": str(site.scraped_article_dir()),

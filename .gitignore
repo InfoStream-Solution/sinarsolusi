@@ -331,3 +331,7 @@ cython_debug/
 /apps/news_scraper/scripts/
 /identifier.sqlite
 AGENTS.md
+/apps/web_scraper/.codex
+/apps/web_scraper/.python-version
+/apps/news_scraper/src/readme.local
+!/apps/news_scraper/scripts/build_image.sh

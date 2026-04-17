@@ -28,6 +28,7 @@ This app is intentionally small and site-driven:
 ```text
 apps/news_scraper/
 ├── Dockerfile
+├── compose.dev.yaml
 ├── pyproject.toml
 ├── .env.example
 └── src/
@@ -178,7 +179,7 @@ uv run seed --keep-seed kompas.com
 Queue format:
 
 ```json
-{"url": "https://kompas.com/...", "scraped": false}
+{"url": "https://kompas.com/...", "discovered_at": "2026-04-11T00:00:00+07:00"}
 ```
 
 For Kompas, article links are canonicalized during seeding so queue entries are stable.
@@ -220,7 +221,6 @@ CONTENT_DIR/news_article/<domain>/<slug>.json
 CONTENT_DIR/news_article/<domain>/<slug>.md
 ```
 
-- marks successfully processed links as scraped in the queue
 - removes intermediate article HTML by default
 
 Keep raw article HTML:

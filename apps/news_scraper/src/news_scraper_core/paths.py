@@ -27,10 +27,6 @@ def links_jsonl_path(links_dir: Path, domain: str) -> Path:
     return links_dir / f"{domain}.jsonl"
 
 
-def links_meta_json_path(links_dir: Path, domain: str) -> Path:
-    return links_dir / f"{domain}.meta.json"
-
-
 def parsed_articles_dir(content_dir: Path, domain: str) -> Path:
     return content_dir / "news_article" / domain
 

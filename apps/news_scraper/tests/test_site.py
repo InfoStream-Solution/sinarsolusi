@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-import src.sites.base as base_module
-from src.config import Settings
-from src.sites.base import BaseSite
-from src.sites.beritasatu_com import BeritasatuComSite
-from src.sites.detik_com import DetikComSite
-from src.sites.kompas_com import KompasComSite
-from src.site_loader import load_site
+import news_scraper_core.sites.base as base_module
+from news_scraper_core.config import Settings
+from news_scraper_core.sites.base import BaseSite
+from news_scraper_core.sites.beritasatu_com import BeritasatuComSite
+from news_scraper_core.sites.detik_com import DetikComSite
+from news_scraper_core.sites.kompas_com import KompasComSite
+from news_scraper_core.site_loader import load_site
 
 
 @pytest.fixture

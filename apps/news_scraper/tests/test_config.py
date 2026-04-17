@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-import src.config as config
+import news_scraper_core.config as config
 
 
-def test_get_settings_requires_dotenv_in_cwd(
+def test_get_settings_requires_data_dir_even_without_dotenv(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.chdir(Path("/tmp"))
     monkeypatch.delenv("DATA_DIR", raising=False)
 
-    with pytest.raises(ValueError, match=r"Error \.env is not found in /tmp/\.env"):
+    with pytest.raises(ValueError, match=r"DATA_DIR is required"):
         config.get_settings()

@@ -5,9 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import src.scrape as scrape
-from src.config import Settings
-from src.models import ParsedContent
+import news_scraper_core.scrape as scrape
+from news_scraper_core.config import Settings
+from news_scraper_core.models import ParsedContent
 
 
 class DummySite:
@@ -23,7 +23,8 @@ class DummySite:
         return url.split("#", 1)[0]
 
     def scraped_article_output_path(self, url: str) -> Path:
-        return self.settings.scraped_dir / self.domain / "article_html" / "example.html"
+        slug = url.rsplit("/", 1)[-1].split("#", 1)[0]
+        return self.settings.scraped_dir / self.domain / "article_html" / f"{slug}.html"
 
     def scrape_article(self, url: str):
         path = self.scraped_article_output_path(url)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 
 from .config import get_settings
 from .site_loader import load_site
@@ -28,10 +29,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     return parser
 
-def main() -> None:
-
+def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args((argv or sys.argv)[1:])
 
     settings = get_settings()
     configure_logging(debug=settings.scraper_debug)
