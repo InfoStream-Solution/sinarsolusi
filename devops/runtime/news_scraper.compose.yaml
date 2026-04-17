@@ -1,13 +1,122 @@
 services:
-  news-scraper:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-news_scraper}
+      POSTGRES_USER: ${DB_USER:-news_scraper}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-news_scraper}
+    ports:
+      - "${DB_PORT:-54320}:5432"
+    volumes:
+      - ${POSTGRES_DATA_DIR:-/var/lib/sinarsolusi/postgres}:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-63790}:6379"
+
+  web:
     image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    depends_on:
+      - postgres
+      - redis
     env_file:
       - ${ENV_FILE:-/etc/news_scraper.env}
     environment:
-      SEED_DIR: /data/seed
-      LINKS_DIR: /data/links
-      SCRAPED_DIR: /data/scraped
-      CONTENT_DIR: /data/content
+      DATA_DIR: /data
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-news_scraper}
+      DB_USER: ${DB_USER:-news_scraper}
+      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
+      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+      REDIS_URL: redis://redis:6379/0
+      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
+      KEEP_SEED: ${KEEP_SEED:-0}
+      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
+    command:
+      [
+        "sh",
+        "-c",
+        "python -m news_admin.manage collectstatic --noinput && exec gunicorn news_admin.config.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_CONCURRENCY:-2} --threads ${WEB_THREADS:-4} --timeout ${WEB_TIMEOUT:-60}"
+      ]
+    ports:
+      - "${WEB_PORT:-8585}:8000"
+    volumes:
+      - ${HOST_SEED_DIR:-/var/lib/sinarsolusi/seed}:/data/seed
+      - ${HOST_LINKS_DIR:-/var/lib/sinarsolusi/links}:/data/links
+      - ${HOST_SCRAPED_DIR:-/var/lib/sinarsolusi/scraped}:/data/scraped
+      - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content
+
+  worker:
+    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ${ENV_FILE:-/etc/news_scraper.env}
+    environment:
+      DATA_DIR: /data
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-news_scraper}
+      DB_USER: ${DB_USER:-news_scraper}
+      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
+      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+      REDIS_URL: redis://redis:6379/0
+      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
+      KEEP_SEED: ${KEEP_SEED:-0}
+      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
+    command: ["celery", "-A", "news_admin.celery_app", "worker", "-l", "info"]
+    volumes:
+      - ${HOST_SEED_DIR:-/var/lib/sinarsolusi/seed}:/data/seed
+      - ${HOST_LINKS_DIR:-/var/lib/sinarsolusi/links}:/data/links
+      - ${HOST_SCRAPED_DIR:-/var/lib/sinarsolusi/scraped}:/data/scraped
+      - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content
+
+  beat:
+    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ${ENV_FILE:-/etc/news_scraper.env}
+    environment:
+      DATA_DIR: /data
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-news_scraper}
+      DB_USER: ${DB_USER:-news_scraper}
+      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
+      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+      REDIS_URL: redis://redis:6379/0
+      SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
+      KEEP_SEED: ${KEEP_SEED:-0}
+      KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
+    command: ["celery", "-A", "news_admin.celery_app", "beat", "-l", "info"]
+    volumes:
+      - ${HOST_SEED_DIR:-/var/lib/sinarsolusi/seed}:/data/seed
+      - ${HOST_LINKS_DIR:-/var/lib/sinarsolusi/links}:/data/links
+      - ${HOST_SCRAPED_DIR:-/var/lib/sinarsolusi/scraped}:/data/scraped
+      - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content
+
+  news-scraper:
+    profiles: ["job"]
+    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ${ENV_FILE:-/etc/news_scraper.env}
+    environment:
+      DATA_DIR: /data
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-news_scraper}
+      DB_USER: ${DB_USER:-news_scraper}
+      DB_PASSWORD: ${DB_PASSWORD:-news_scraper}
+      STORE_DATABASE_URL: postgresql://${DB_USER:-news_scraper}:${DB_PASSWORD:-news_scraper}@postgres:5432/${DB_NAME:-news_scraper}
+      REDIS_URL: redis://redis:6379/0
       SCRAPER_DEBUG: ${SCRAPER_DEBUG:-0}
       KEEP_SEED: ${KEEP_SEED:-0}
       KEEP_SCRAPED: ${KEEP_SCRAPED:-0}
