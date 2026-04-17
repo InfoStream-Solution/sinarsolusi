@@ -7,15 +7,15 @@ from pathlib import Path
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from src.config import get_settings
-    from src.links import (
+    from news_scraper_core.config import get_settings
+    from news_scraper_core.links import (
         extract_internal_links,
         normalize_links,
         write_links,
     )
-    from src.paths import links_jsonl_path
-    from src.site_loader import load_site
-    from src.utils import configure_logging, get_logger
+    from news_scraper_core.paths import links_jsonl_path
+    from news_scraper_core.site_loader import load_site
+    from news_scraper_core.utils import configure_logging, get_logger
 else:
     from .config import get_settings
     from .links import (
@@ -43,9 +43,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args((argv or sys.argv)[1:])
 
     settings = get_settings()
 

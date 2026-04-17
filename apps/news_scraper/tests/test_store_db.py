@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.links import LinkMetaRecord
-from src.store.db import DbStore
+from news_scraper_core.links import LinkMetaRecord
+from news_scraper_core.store.db import DbStore
 
 
 def test_db_store_upserts_and_reads_records(tmp_path: Path) -> None:

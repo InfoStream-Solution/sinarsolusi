@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.utils.url import remove_utm_query_params
+from news_scraper_core.utils.url import remove_utm_query_params
 
 
 def test_remove_utm_query_params_strips_tracking_params_and_fragment() -> None:

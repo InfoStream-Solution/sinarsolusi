@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import src.post_news as post_news
-from src.config import Settings
-from src.models import ParsedContent
+import news_scraper_core.post_news as post_news
+from news_scraper_core.config import Settings
+from news_scraper_core.models import ParsedContent
 
 
 class DummyResponse:

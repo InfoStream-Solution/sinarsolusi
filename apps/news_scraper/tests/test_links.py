@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.links import (
+from news_scraper_core.links import (
     LinkRecord,
     extract_internal_links,
     normalize_links,

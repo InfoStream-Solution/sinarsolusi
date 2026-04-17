@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
+import sys
 from urllib import request
 
 from .config import get_settings
@@ -24,17 +26,39 @@ class PostedRecord:
 
 _MONTHS = {
     "januari": 1,
+    "jan": 1,
     "februari": 2,
+    "feb": 2,
     "maret": 3,
+    "mar": 3,
     "april": 4,
+    "apr": 4,
     "mei": 5,
     "juni": 6,
+    "jun": 6,
     "juli": 7,
+    "jul": 7,
     "agustus": 8,
+    "agu": 8,
     "september": 9,
+    "sep": 9,
     "oktober": 10,
+    "okt": 10,
     "november": 11,
+    "nov": 11,
     "desember": 12,
+    "des": 12,
+}
+
+_WEEKDAYS = {
+    "senin",
+    "selasa",
+    "rabu",
+    "kamis",
+    "jumat",
+    "jum'at",
+    "sabtu",
+    "minggu",
 }
 
 
@@ -81,9 +105,21 @@ def normalize_published_at(published_at: str | None) -> str | None:
         return parsed.isoformat()
 
     try:
-        date_part, time_part = raw_value.rsplit(",", 1)
-        day_text, month_text, year_text = date_part.strip().split()
-        clock_text = time_part.strip().split()[0]
+        raw_value = re.sub(r"\s+", " ", raw_value).strip()
+        raw_value = raw_value.replace("WIB", "").replace("WITA", "").replace("WIT", "").strip()
+        if "," in raw_value:
+            left_part, right_part = raw_value.split(",", 1)
+            if left_part.strip().lower().rstrip(".") in _WEEKDAYS:
+                raw_value = right_part.strip()
+        if "," in raw_value:
+            date_part, time_part = [part.strip() for part in raw_value.split(",", 1)]
+            day_text, month_text, year_text = date_part.split()
+            clock_text = time_part.split()[0]
+        else:
+            parts = raw_value.split(" ")
+            if len(parts) < 4:
+                return raw_value
+            day_text, month_text, year_text, clock_text = parts[:4]
         hour_text, minute_text = clock_text.split(":", 1)
         month = _MONTHS[month_text.lower()]
         parsed = datetime(
@@ -178,9 +214,9 @@ def log_dry_run(
     )
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args((argv or sys.argv)[1:])
 
     settings = get_settings()
     configure_logging(debug=settings.scraper_debug)

@@ -8,10 +8,10 @@ from types import SimpleNamespace
 
 import pytest
 
-import src.llm_api_client.base as llm_base
-import src.llm_api_client.google as llm_google
-import src.summarizer as summarizer
-from src.llm_api_client.schema import SummarizationError
+import news_scraper_core.llm_api_client.base as llm_base
+import news_scraper_core.llm_api_client.google as llm_google
+import news_scraper_core.summarizer as summarizer
+from news_scraper_core.llm_api_client.schema import SummarizationError
 
 
 class DummyModels:
