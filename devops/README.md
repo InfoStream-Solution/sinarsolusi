@@ -5,8 +5,8 @@ This directory keeps deployment concerns separate from application source.
 ## Image Flow
 
 - Image target: `ghcr.io/infostream-solution/sinarsolusi_news_scraper`
-- `devops/scripts/news_scraper.publish.sh` is the publish script that tags and pushes the built image to GHCR.
 - `apps/news_scraper/scripts/build_image.sh` is the developer build script for the scraper image, using the app-local Dockerfile at `apps/news_scraper/Dockerfile`.
+- `apps/news_scraper/scripts/publish_image.sh` is the app-local publish script that tags and pushes the built image to GHCR.
 
 ## Runtime
 
@@ -77,7 +77,7 @@ If you use a different deploy user or data root, override `DEPLOY_USER` and `DAT
 
 ```bash
 cd apps/news_scraper && IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=local-test bash ./scripts/build_image.sh
-SOURCE_TAG=local-test PUBLISH_TAG=tagname IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper ./devops/scripts/news_scraper.publish.sh
+cd apps/news_scraper && SOURCE_TAG=local-test PUBLISH_TAG=tagname IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper bash ./scripts/publish_image.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh extract-news kompas.com
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=../../.env.news_scraper docker compose -f devops/runtime/news_scraper.compose.yaml run --rm news-scraper seed kompas.com
