@@ -16,7 +16,7 @@ services:
       - "${REDIS_PORT:-63790}:6379"
 
   web:
-    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    image: ghcr.io/infostream-solution/sinarsolusi_news_scraper:${IMAGE_TAG:-latest}
     depends_on:
       - postgres
       - redis
@@ -49,7 +49,7 @@ services:
       - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content
 
   worker:
-    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    image: ghcr.io/infostream-solution/sinarsolusi_news_scraper:${IMAGE_TAG:-latest}
     depends_on:
       - postgres
       - redis
@@ -75,7 +75,7 @@ services:
       - ${HOST_CONTENT_DIR:-/var/lib/sinarsolusi/content}:/data/content
 
   beat:
-    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    image: ghcr.io/infostream-solution/sinarsolusi_news_scraper:${IMAGE_TAG:-latest}
     depends_on:
       - postgres
       - redis
@@ -102,7 +102,7 @@ services:
 
   news-scraper:
     profiles: ["job"]
-    image: ${IMAGE_NAME:?set IMAGE_NAME}:${IMAGE_TAG:-latest}
+    image: ghcr.io/infostream-solution/sinarsolusi_news_scraper:${IMAGE_TAG:-latest}
     depends_on:
       - postgres
       - redis
