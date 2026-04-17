@@ -45,7 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args((argv or sys.argv)[1:])
+    args = parser.parse_args() if argv is None else parser.parse_args(argv[1:])
 
     settings = get_settings()
 

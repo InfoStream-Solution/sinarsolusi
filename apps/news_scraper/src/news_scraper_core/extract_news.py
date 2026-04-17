@@ -51,7 +51,7 @@ def append_error_record(path: Path, record: dict[str, object]) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args((argv or sys.argv)[1:])
+    args = parser.parse_args() if argv is None else parser.parse_args(argv[1:])
 
     settings = get_settings()
     configure_logging(debug=settings.scraper_debug)
