@@ -6,7 +6,6 @@ import re
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-import sys
 from urllib import request
 
 from .config import get_settings
