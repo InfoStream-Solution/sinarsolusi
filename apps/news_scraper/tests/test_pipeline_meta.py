@@ -8,6 +8,7 @@ import pytest
 import news_scraper_core.extract_news as extract_news
 import news_scraper_core.seed as seed
 from news_scraper_core.config import Settings
+from news_scraper_core.links import LinkRecord
 from news_scraper_core.links import read_links
 from news_scraper_core.models import ParsedContent
 
@@ -137,6 +138,12 @@ def test_seed_populates_meta_and_preserves_existing_scraped_state(
     )
     monkeypatch.setattr(
         seed,
+        "_register_discovered_hosts",
+        lambda domain, hosts: {"created": 0, "skipped": len(hosts)},
+    )
+    monkeypatch.setattr(seed, "_load_additional_allowed_hosts", lambda domain: set())
+    monkeypatch.setattr(
+        seed,
         "build_parser",
         lambda: SimpleNamespace(
             parse_args=lambda: SimpleNamespace(domain="example.com", keep_seed=True)
@@ -152,6 +159,65 @@ def test_seed_populates_meta_and_preserves_existing_scraped_state(
         "https://example.com/news/b",
     ]
     assert all(link.discovered_at for link in links)
+
+
+def test_seed_merges_additional_allowed_hosts(
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class HostAwareSeedSite(DummySeedSite):
+        link_allowed_hosts = {"example.com"}
+
+    monkeypatch.setattr(seed, "get_settings", lambda: settings)
+    monkeypatch.setattr(seed, "configure_logging", lambda debug: None)
+    monkeypatch.setattr(
+        seed,
+        "get_logger",
+        lambda name: SimpleNamespace(info=lambda *args, **kwargs: None),
+    )
+    monkeypatch.setattr(
+        seed, "load_site", lambda domain, settings: HostAwareSeedSite(settings)
+    )
+    monkeypatch.setattr(
+        seed, "_load_additional_allowed_hosts", lambda domain: {"news.example.com"}
+    )
+    monkeypatch.setattr(
+        seed,
+        "_register_discovered_hosts",
+        lambda domain, hosts: (
+            captured.__setitem__("registered_hosts", set(hosts))
+            or {"created": len(hosts), "skipped": 0}
+        ),
+    )
+    monkeypatch.setattr(seed, "write_links", lambda path, links: None)
+    monkeypatch.setattr(seed, "normalize_links", lambda links, normalizer: links)
+    monkeypatch.setattr(
+        seed,
+        "extract_domain_links",
+        lambda seed_url, html: [
+            LinkRecord(
+                url="https://example.com/news/a",
+                discovered_at="2026-04-11T00:00:00+07:00",
+            ),
+            LinkRecord(
+                url="https://news.example.com/news/b",
+                discovered_at="2026-04-11T00:00:00+07:00",
+            ),
+        ],
+    )
+    monkeypatch.setattr(
+        seed,
+        "build_parser",
+        lambda: SimpleNamespace(
+            parse_args=lambda: SimpleNamespace(domain="example.com", keep_seed=True)
+        ),
+    )
+
+    seed.main()
+
+    assert captured["registered_hosts"] == {"example.com", "news.example.com"}
 
 
 def test_extract_news_updates_meta_on_success_and_failure(

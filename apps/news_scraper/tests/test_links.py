@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from news_scraper_core.links import LinkRecord
+from news_scraper_core.links import extract_domain_links
 from news_scraper_core.links import extract_internal_links
 from news_scraper_core.links import normalize_links
 from news_scraper_core.links import page_output_name
@@ -30,6 +31,24 @@ def test_extract_internal_links_filters_and_deduplicates() -> None:
         "https://www.example.com/news/b",
     ]
     assert all(link.discovered_at for link in links)
+
+
+def test_extract_domain_links_includes_subdomains_under_seed_domain() -> None:
+    html = """
+    <a href="/news/a#section">A</a>
+    <a href="https://www.example.com/news/a">dup</a>
+    <a href="https://news.example.com/news/b">B</a>
+    <a href="https://other.example.com/news/c">C</a>
+    <a href="https://not-example.com/news/d">D</a>
+    """
+
+    links = extract_domain_links("https://www.example.com", html)
+
+    assert [link.url for link in links] == [
+        "https://news.example.com/news/b",
+        "https://other.example.com/news/c",
+        "https://www.example.com/news/a",
+    ]
 
 
 def test_write_read_and_mark_links(tmp_path: Path) -> None:

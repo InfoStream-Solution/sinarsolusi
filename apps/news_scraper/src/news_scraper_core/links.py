@@ -31,11 +31,41 @@ class LinkMetaRecord:
     error_message: str | None
 
 
-def _normalized_host(host: str) -> str:
+def normalize_host(host: str) -> str:
     lowered = host.lower().strip()
     if lowered.startswith("www."):
         return lowered[4:]
     return lowered
+
+
+def _host_under_domain(host: str, domain: str) -> bool:
+    normalized_host = normalize_host(host)
+    normalized_domain = normalize_host(domain)
+    return normalized_host == normalized_domain or normalized_host.endswith(
+        f".{normalized_domain}"
+    )
+
+
+def extract_domain_links(seed_url: str, html: str) -> list[LinkRecord]:
+    seed_host = normalize_host(urlparse(seed_url).netloc)
+    discovered: dict[str, LinkRecord] = {}
+
+    for match in LINK_PATTERN.finditer(html):
+        raw_href = match.group(1).strip()
+        absolute = urljoin(seed_url, raw_href)
+        parsed = urlparse(absolute)
+
+        if parsed.scheme not in {"http", "https"}:
+            continue
+        if not _host_under_domain(parsed.netloc, seed_host):
+            continue
+
+        normalized = parsed._replace(fragment="").geturl()
+        discovered.setdefault(
+            normalized, LinkRecord(url=normalized, discovered_at=now_iso())
+        )
+
+    return sorted(discovered.values(), key=lambda item: item.url)
 
 
 def extract_internal_links(
@@ -43,9 +73,9 @@ def extract_internal_links(
     html: str,
     allowed_hosts: set[str] | None = None,
 ) -> list[LinkRecord]:
-    seed_host = _normalized_host(urlparse(seed_url).netloc)
+    seed_host = normalize_host(urlparse(seed_url).netloc)
     normalized_allowed_hosts = {
-        _normalized_host(host) for host in (allowed_hosts or {seed_host})
+        normalize_host(host) for host in (allowed_hosts or {seed_host})
     }
     discovered: dict[str, LinkRecord] = {}
 
@@ -56,7 +86,7 @@ def extract_internal_links(
 
         if parsed.scheme not in {"http", "https"}:
             continue
-        if _normalized_host(parsed.netloc) not in normalized_allowed_hosts:
+        if normalize_host(parsed.netloc) not in normalized_allowed_hosts:
             continue
 
         normalized = parsed._replace(fragment="").geturl()
