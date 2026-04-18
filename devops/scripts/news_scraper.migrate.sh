@@ -9,10 +9,10 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 ENV_FILE="${ENV_FILE:-/etc/news_scraper.env}"
 
 if [[ "${ENV_FILE}" == "/etc/news_scraper.env" && ! -f "${ENV_FILE}" ]]; then
-  printf 'missing required env file: %s\n' "${ENV_FILE}" >&2
+  printf "missing required env file: %s\n" "${ENV_FILE}" >&2
   exit 1
 fi
 
 IMAGE_TAG="${IMAGE_TAG}" ENV_FILE="${ENV_FILE}" \
-  docker compose -f "${COMPOSE_FILE}" exec web \
+  docker compose -f "${COMPOSE_FILE}" run --rm web \
   python -m news_admin.manage migrate
