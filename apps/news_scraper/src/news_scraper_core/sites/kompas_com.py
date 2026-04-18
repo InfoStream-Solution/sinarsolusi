@@ -89,17 +89,36 @@ class KompasComSite(BaseSite):
         rendered = self._node_text(root.query_one("div.read__time"))
         if not rendered:
             return None
-        if "," in rendered:
-            _, published_at = rendered.split(",", 1)
-            return published_at.strip()
+        if "Diperbarui " in rendered:
+            rendered = rendered.split("Diperbarui ", 1)[1].strip()
+        rendered = re.sub(r"^Kompas\.com\s*,\s*", "", rendered).strip()
+        match = re.search(
+            r"\b\d{1,2}/\d{1,2}/\d{4},\s*\d{2}:\d{2}\s*WIB\b",
+            rendered,
+        )
+        if match is not None:
+            return match.group(0)
         return rendered or None
 
     def _extract_author(self, root: justhtml.Document) -> str | None:
-        role = self._node_text(root.query_one(".credit-title p")).lower()
-        if role == "penulis":
-            name = self._node_text(root.query_one(".credit-title-nameEditor"))
-            if name:
-                return name
+        opinion_link = self._node_text(root.query_one("a.opinion__link"))
+        if opinion_link:
+            return opinion_link
+
+        penulis_names: list[str] = []
+        for card in root.query(".credit-author"):
+            name = self._node_text(card.query_one(".credit-author-name"))
+            position = self._node_text(card.query_one(".credit-author-position")).lower()
+            if not name or "penulis" not in position:
+                continue
+            penulis_names.append(name.rstrip(",").strip())
+        if penulis_names:
+            return ", ".join(penulis_names)
+
+        names = [self._node_text(node) for node in root.query(".credit-title-nameEditor")]
+        names = [name.rstrip(",").strip() for name in names if name]
+        if names:
+            return ", ".join(names)
         return None
 
     def _should_skip_item(self, text: str) -> bool:

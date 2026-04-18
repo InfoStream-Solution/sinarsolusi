@@ -4,11 +4,14 @@
     {{ block.super }}
     {% if original %}
     <div class="submit-row">
-        <form method="post" action="{% url 'admin:articles_article_refresh' original.pk %}">
-            {% csrf_token %}
-            <input type="submit" value="Refresh from source URL" class="default">
-        </form>
+        <input
+            type="submit"
+            value="Queue refresh from source URL"
+            class="default"
+            formaction="{% url 'admin:articles_article_refresh' original.pk %}"
+            formmethod="post"
+            formnovalidate
+        >
     </div>
     {% endif %}
 {% endblock %}
-

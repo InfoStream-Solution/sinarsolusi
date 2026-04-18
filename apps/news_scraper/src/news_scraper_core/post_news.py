@@ -106,6 +106,21 @@ def normalize_published_at(published_at: str | None) -> str | None:
     try:
         raw_value = re.sub(r"\s+", " ", raw_value).strip()
         raw_value = raw_value.replace("WIB", "").replace("WITA", "").replace("WIT", "").strip()
+        raw_value = re.sub(r"\s*\|\s*", ", ", raw_value)
+        match = re.fullmatch(
+            r"(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})(?:,\s*|\s+)(?P<hour>\d{1,2}):(?P<minute>\d{2})(?:\s*WIB)?",
+            raw_value,
+        )
+        if match is not None:
+            parsed = datetime(
+                int(match.group("year")),
+                int(match.group("month")),
+                int(match.group("day")),
+                int(match.group("hour")),
+                int(match.group("minute")),
+                tzinfo=timezone(timedelta(hours=7)),
+            )
+            return parsed.isoformat()
         if "," in raw_value:
             left_part, right_part = raw_value.split(",", 1)
             if left_part.strip().lower().rstrip(".") in _WEEKDAYS:

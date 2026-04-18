@@ -8,6 +8,7 @@ class ScrapeJob(models.Model):
         SEED = "seed", "Seed"
         EXTRACT = "extract", "Extract"
         SCRAPE = "scrape", "Scrape"
+        REFRESH = "refresh", "Refresh"
         POST = "post", "Post"
         IMPORT_ARTICLES = "import_articles", "Import Articles"
 

@@ -51,6 +51,77 @@ class BeritasatuComSite(BaseSite):
             return self._clean_text(to_text(separator=" ", separator_blocks_only=True))
         return ""
 
+    def _node_attr(self, node: object | None, name: str) -> str:
+        if node is None:
+            return ""
+        attrs = getattr(node, "attrs", None) or {}
+        value = attrs.get(name)
+        if value is None:
+            return ""
+        return self._clean_text(str(value))
+
+    def _looks_like_published_at(self, value: str) -> bool:
+        if not value:
+            return False
+        if not any(ch.isdigit() for ch in value):
+            return False
+        return True
+
+    def _extract_attr_from_raw_html(
+        self,
+        html: str,
+        *,
+        tag: str,
+        attr_name: str,
+        attr_value: str | None = None,
+        value_attr: str,
+    ) -> str | None:
+        pattern = re.compile(rf"<{tag}\b[^>]*>", re.IGNORECASE | re.DOTALL)
+        attr_pattern = re.compile(
+            rf"{attr_name}\s*=\s*([\"'])(?P<value>.*?)\1",
+            re.IGNORECASE | re.DOTALL,
+        )
+        value_pattern = (
+            re.compile(
+                rf"{value_attr}\s*=\s*([\"'])(?P<value>.*?)\1",
+                re.IGNORECASE | re.DOTALL,
+            )
+            if value_attr
+            else None
+        )
+
+        for match in pattern.finditer(html):
+            tag_html = match.group(0)
+            attr_match = attr_pattern.search(tag_html)
+            if attr_match is None:
+                continue
+            if attr_value is not None and attr_match.group("value") != attr_value:
+                continue
+            if value_pattern is None:
+                return self._clean_text(attr_match.group("value"))
+            value_match = value_pattern.search(tag_html)
+            if value_match is not None:
+                return self._clean_text(value_match.group("value"))
+        return None
+
+    def _extract_text_from_raw_html(
+        self,
+        html: str,
+        *,
+        tag: str,
+        class_name: str,
+    ) -> str | None:
+        pattern = re.compile(
+            rf"<{tag}\b[^>]*class\s*=\s*([\"'])[^\"']*\b{re.escape(class_name)}\b[^\"']*\1[^>]*>(?P<value>.*?)</{tag}>",
+            re.IGNORECASE | re.DOTALL,
+        )
+        for match in pattern.finditer(html):
+            value = re.sub(r"<[^>]+>", " ", match.group("value"))
+            value = self._clean_text(value)
+            if self._looks_like_published_at(value):
+                return value
+        return None
+
     def normalize_article_url(self, url: str) -> str:
         normalized = self.normalize_url(url)
         parsed = urlparse(normalized)
@@ -100,40 +171,92 @@ class BeritasatuComSite(BaseSite):
             return parts[0].replace("-", " ").title()
         return None
 
-    def _extract_published_at(self, root: justhtml.Document) -> str | None:
-        selectors = [
+    def _extract_published_at(self, html: str, root: justhtml.Document) -> str | None:
+        text_selectors = [
+            "body > main > div > div > div.col > div.row.mb-4 > div.col.ps-0 > small > span",
+            "body > main > div > div > div.col > small",
             "small.text-muted",
             "div.article__date",
             "div.article__date-info",
             "div.article__meta",
             "time",
         ]
-        for selector in selectors:
-            rendered = self._node_text(root.query_one(selector))
+        for selector in text_selectors:
+            for node in root.query(selector):
+                rendered = self._node_text(node)
+                if self._looks_like_published_at(rendered):
+                    return rendered
+
+        attr_selectors = [
+            ("meta[property='article:published_time']", "content"),
+            ("meta[name='article:published_time']", "content"),
+            ("meta[property='datePublished']", "content"),
+            ("meta[itemprop='datePublished']", "content"),
+            ("time[datetime]", "datetime"),
+        ]
+        for selector, attr_name in attr_selectors:
+            for node in root.query(selector):
+                rendered = self._node_attr(node, attr_name)
+                if self._looks_like_published_at(rendered):
+                    return rendered
+
+        raw_html_fallbacks = [
+            ("span", "text-muted"),
+            ("small", "text-muted"),
+            ("meta", "property", "article:published_time", "content"),
+            ("meta", "name", "article:published_time", "content"),
+            ("meta", "property", "datePublished", "content"),
+            ("meta", "itemprop", "datePublished", "content"),
+            ("time", "datetime", None, "datetime"),
+        ]
+        for tag, class_name in raw_html_fallbacks[:2]:
+            rendered = self._extract_text_from_raw_html(
+                html,
+                tag=tag,
+                class_name=class_name,
+            )
             if rendered:
+                return rendered
+        for tag, attr_name, attr_value, value_attr in raw_html_fallbacks[2:]:
+            rendered = self._extract_attr_from_raw_html(
+                html,
+                tag=tag,
+                attr_name=attr_name,
+                attr_value=attr_value,
+                value_attr=value_attr,
+            )
+            if self._looks_like_published_at(rendered or ""):
                 return rendered
         return None
 
     def _extract_author(self, root: justhtml.Document) -> str | None:
         selectors = [
+            "body > main > div > div > div.col > div.row.mb-4 > div.col.ps-0 > span",
             "div.my-auto.small",
             "div.article__author",
             "div.article__author-name",
             "span.article__author",
+            "span.b1-text-navy",
             "div.article__meta",
         ]
         for selector in selectors:
-            rendered = self._node_text(root.query_one(selector))
-            if not rendered:
-                continue
-            if "Penulis:" in rendered:
-                rendered = rendered.split("Penulis:", 1)[1].strip()
-                if "|" in rendered:
-                    rendered = rendered.split("|", 1)[0].strip()
-                return rendered
-            if " | " in rendered:
-                rendered = rendered.split(" | ", 1)[0]
-            return rendered
+            nodes = list(root.query(selector))
+            if not nodes:
+                node = root.query_one(selector)
+                nodes = [node] if node is not None else []
+            for node in nodes:
+                rendered = self._node_text(node)
+                if not rendered:
+                    continue
+                if "Penulis:" in rendered:
+                    rendered = rendered.split("Penulis:", 1)[1].strip()
+                    if "|" in rendered:
+                        rendered = rendered.split("|", 1)[0].strip()
+                    return rendered
+                if " | " in rendered:
+                    rendered = rendered.split(" | ", 1)[0]
+                if rendered != "BACA JUGA":
+                    return rendered
         return None
 
     def _should_skip_item(self, text: str) -> bool:
@@ -208,7 +331,7 @@ class BeritasatuComSite(BaseSite):
         title = self._extract_title(root, url)
         category = self._extract_category(root) or self._category_from_url(url)
         author = self._extract_author(root)
-        published_at = self._extract_published_at(root)
+        published_at = self._extract_published_at(html, root)
         items = self._extract_content_items(root)
         content = "\n\n".join(items)
         summary = items[0] if items else None

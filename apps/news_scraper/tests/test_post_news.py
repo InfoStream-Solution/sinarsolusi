@@ -73,6 +73,18 @@ def test_normalize_published_at_handles_kompas_format() -> None:
     )
 
 
+def test_normalize_published_at_handles_beritasatu_format() -> None:
+    assert post_news.normalize_published_at("Kamis, 16 April 2026 | 17:47 WIB") == (
+        "2026-04-16T17:47:00+07:00"
+    )
+
+
+def test_normalize_published_at_handles_kompas_slash_date_format() -> None:
+    assert post_news.normalize_published_at("18/04/2026, 10:03 WIB") == (
+        "2026-04-18T10:03:00+07:00"
+    )
+
+
 def test_post_article_uses_token_auth(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, object] = {}
 
