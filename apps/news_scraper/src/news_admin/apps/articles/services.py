@@ -53,7 +53,9 @@ def _resolve_site_domain(article: Article) -> str:
     return _domain_from_url(article.url)
 
 
-def _save_article_timestamp_fields(article: Article, *, published_at, scraped_at) -> None:
+def _save_article_timestamp_fields(
+    article: Article, *, published_at, scraped_at
+) -> None:
     update_fields = [
         "url",
         "title",
@@ -75,8 +77,8 @@ def _save_article_timestamp_fields(article: Article, *, published_at, scraped_at
 
 
 def import_articles_for_domain(domain: str, *, content_dir=None) -> dict[str, int]:
-    from pathlib import Path
     import json
+    from pathlib import Path
 
     from .models import ArticleImportRun
 
@@ -120,8 +122,12 @@ def import_articles_for_domain(domain: str, *, content_dir=None) -> dict[str, in
                 scraped_at = _merge_timestamp(existing.scraped_at, scraped_at)
                 category = category if category is not None else existing.category
                 author = author if author is not None else existing.author
-                word_count = word_count if word_count is not None else existing.word_count
-                char_count = char_count if char_count is not None else existing.char_count
+                word_count = (
+                    word_count if word_count is not None else existing.word_count
+                )
+                char_count = (
+                    char_count if char_count is not None else existing.char_count
+                )
             defaults = {
                 "title": payload.get("title", ""),
                 "source_site": payload.get("source_site", domain),
@@ -133,7 +139,9 @@ def import_articles_for_domain(domain: str, *, content_dir=None) -> dict[str, in
                 "published_at": published_at,
                 "scraped_at": scraped_at,
             }
-            _, was_created = Article.objects.update_or_create(url=url, defaults=defaults)
+            _, was_created = Article.objects.update_or_create(
+                url=url, defaults=defaults
+            )
             if was_created:
                 created += 1
             else:
@@ -194,7 +202,9 @@ def refresh_article_from_source(article: Article) -> dict[str, object]:
     site = load_site(site_domain, settings=settings_obj)
     normalized_url = site.normalize_article_url(article.url)
     if not site.is_article_url(normalized_url):
-        raise ValueError(f"{normalized_url!r} is not a valid article URL for {site.domain}")
+        raise ValueError(
+            f"{normalized_url!r} is not a valid article URL for {site.domain}"
+        )
 
     site.scrape_article(normalized_url)
     html_path = site.scraped_article_output_path(normalized_url)
@@ -216,7 +226,9 @@ def refresh_article_from_source(article: Article) -> dict[str, object]:
     article.char_count = parsed.char_count
     published_at = _to_datetime(parsed.published_at)
     scraped_at = _to_datetime(parsed.scraped_at)
-    _save_article_timestamp_fields(article, published_at=published_at, scraped_at=scraped_at)
+    _save_article_timestamp_fields(
+        article, published_at=published_at, scraped_at=scraped_at
+    )
 
     return {
         "article_id": article.id,

@@ -8,24 +8,22 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from news_scraper_core.config import get_settings
-    from news_scraper_core.links import (
-        extract_internal_links,
-        normalize_links,
-        write_links,
-    )
+    from news_scraper_core.links import extract_internal_links
+    from news_scraper_core.links import normalize_links
+    from news_scraper_core.links import write_links
     from news_scraper_core.paths import links_jsonl_path
     from news_scraper_core.site_loader import load_site
-    from news_scraper_core.utils import configure_logging, get_logger
+    from news_scraper_core.utils import configure_logging
+    from news_scraper_core.utils import get_logger
 else:
     from .config import get_settings
-    from .links import (
-        extract_internal_links,
-        normalize_links,
-        write_links,
-    )
+    from .links import extract_internal_links
+    from .links import normalize_links
+    from .links import write_links
     from .paths import links_jsonl_path
     from .site_loader import load_site
-    from .utils import configure_logging, get_logger
+    from .utils import configure_logging
+    from .utils import get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,9 +61,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     links = normalize_links(
         links,
-        lambda url: site.normalize_article_url(url)
-        if site.is_article_url(url)
-        else site.normalize_url(url),
+        lambda url: (
+            site.normalize_article_url(url)
+            if site.is_article_url(url)
+            else site.normalize_url(url)
+        ),
     )
     links = [link for link in links if site.is_article_url(link.url)]
     links_path = links_jsonl_path(settings.links_dir, site.domain)
@@ -83,7 +83,11 @@ def main(argv: list[str] | None = None) -> None:
     if not keep_seed and seed_output_path.exists():
         seed_output_path.unlink()
         removed_seed_file = True
-        logger.info("seed_cleanup domain=%r seed_output_path=%r", site.domain, str(seed_output_path))
+        logger.info(
+            "seed_cleanup domain=%r seed_output_path=%r",
+            site.domain,
+            str(seed_output_path),
+        )
 
     payload = {
         "domain": site.domain,

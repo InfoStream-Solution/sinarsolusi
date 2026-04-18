@@ -20,7 +20,9 @@ class ScrapeJob(models.Model):
 
     job_type = models.CharField(max_length=16, choices=JobType.choices)
     domain = models.CharField(max_length=255)
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.QUEUED)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.QUEUED
+    )
     params = models.JSONField(default=dict, blank=True)
     result_summary = models.JSONField(default=dict, blank=True)
     error_message = models.TextField(blank=True)

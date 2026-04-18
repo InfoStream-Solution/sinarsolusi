@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from urllib.parse import parse_qsl, urlencode, urlparse
+from urllib.parse import parse_qsl
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 
 
 def remove_utm_query_params(url: str) -> str:

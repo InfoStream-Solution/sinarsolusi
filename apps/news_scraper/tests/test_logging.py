@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import logging
 
-from news_scraper_core.utils.logging import BracketFormatter, LogMixin, configure_logging, get_logger
+from news_scraper_core.utils.logging import BracketFormatter
+from news_scraper_core.utils.logging import LogMixin
+from news_scraper_core.utils.logging import configure_logging
+from news_scraper_core.utils.logging import get_logger
 
 
 def test_configure_logging_sets_level_without_duplicating_handlers() -> None:

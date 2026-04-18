@@ -91,7 +91,7 @@ def test_post_article_uses_token_auth(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_urlopen(api_request, timeout: int) -> DummyResponse:
         captured["request"] = api_request
         captured["timeout"] = timeout
-        return DummyResponse(201, "{\"id\": 1}")
+        return DummyResponse(201, '{"id": 1}')
 
     monkeypatch.setattr(post_news.request, "urlopen", fake_urlopen)
 
@@ -118,7 +118,7 @@ def test_post_article_uses_token_auth(monkeypatch: pytest.MonkeyPatch) -> None:
 
     api_request = captured["request"]
     assert status == 201
-    assert body == "{\"id\": 1}"
+    assert body == '{"id": 1}'
     assert captured["timeout"] == 30
     assert api_request.full_url == "http://example.test/api/news/"
     assert api_request.headers["Authorization"] == "Token secret-token"
@@ -159,7 +159,7 @@ def test_main_posts_articles_and_writes_marker(
         return settings
 
     def fake_urlopen(api_request, timeout: int) -> DummyResponse:
-        return DummyResponse(201, "{\"id\": 1}")
+        return DummyResponse(201, '{"id": 1}')
 
     monkeypatch.setattr(post_news, "get_settings", fake_get_settings)
     monkeypatch.setattr(post_news.request, "urlopen", fake_urlopen)
@@ -167,13 +167,17 @@ def test_main_posts_articles_and_writes_marker(
     monkeypatch.setattr(
         post_news,
         "get_logger",
-        lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None),
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
     )
     monkeypatch.setattr(
         post_news,
         "build_parser",
         lambda: SimpleNamespace(
-            parse_args=lambda: SimpleNamespace(domain="kompas.com", limit=0, dry_run=False)
+            parse_args=lambda: SimpleNamespace(
+                domain="kompas.com", limit=0, dry_run=False
+            )
         ),
     )
 
@@ -230,13 +234,17 @@ def test_main_dry_run_skips_posting_and_marker_creation(
     monkeypatch.setattr(
         post_news,
         "get_logger",
-        lambda name: SimpleNamespace(info=fake_info, exception=lambda *args, **kwargs: None),
+        lambda name: SimpleNamespace(
+            info=fake_info, exception=lambda *args, **kwargs: None
+        ),
     )
     monkeypatch.setattr(
         post_news,
         "build_parser",
         lambda: SimpleNamespace(
-            parse_args=lambda: SimpleNamespace(domain="kompas.com", limit=0, dry_run=True)
+            parse_args=lambda: SimpleNamespace(
+                domain="kompas.com", limit=0, dry_run=True
+            )
         ),
     )
 
@@ -288,13 +296,17 @@ def test_main_logs_failed_posts(
     monkeypatch.setattr(
         post_news,
         "get_logger",
-        lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None),
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
     )
     monkeypatch.setattr(
         post_news,
         "build_parser",
         lambda: SimpleNamespace(
-            parse_args=lambda: SimpleNamespace(domain="kompas.com", limit=0, dry_run=False)
+            parse_args=lambda: SimpleNamespace(
+                domain="kompas.com", limit=0, dry_run=False
+            )
         ),
     )
 

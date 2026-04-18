@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-from pathlib import Path
 import re
-from nscraper import HttpScraper, ScrapeOptions
+from pathlib import Path
 from urllib.parse import urlparse
 
-from ..config import Settings
-from ..models import ParsedContent, now_iso
-from ..paths import parsed_articles_dir, scraped_articles_dir, seed_file_path
-from ..utils import LogMixin, remove_utm_query_params
+from nscraper import HttpScraper
+from nscraper import ScrapeOptions
 
+from ..config import Settings
+from ..models import ParsedContent
+from ..models import now_iso
+from ..paths import parsed_articles_dir
+from ..paths import scraped_articles_dir
+from ..paths import seed_file_path
+from ..utils import LogMixin
+from ..utils import remove_utm_query_params
 
 DEFAULT_HEADERS = {
     "Accept": "text/html",

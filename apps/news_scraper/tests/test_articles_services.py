@@ -7,7 +7,9 @@ from types import SimpleNamespace
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "news_admin.config.settings")
-os.environ.setdefault("DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data")
+os.environ.setdefault(
+    "DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data"
+)
 django.setup()
 
 import news_admin.apps.articles.services as article_services  # noqa: E402
@@ -27,7 +29,9 @@ def test_to_datetime_handles_kompas_slash_date_format() -> None:
     assert parsed.isoformat() == "2026-04-18T10:03:00+07:00"
 
 
-def test_import_articles_for_domain_persists_article_metadata(tmp_path: Path, monkeypatch) -> None:
+def test_import_articles_for_domain_persists_article_metadata(
+    tmp_path: Path, monkeypatch
+) -> None:
     content_dir = tmp_path / "content"
     article_dir = content_dir / "news_article" / "beritasatu.com"
     article_dir.mkdir(parents=True, exist_ok=True)
@@ -69,9 +73,15 @@ def test_import_articles_for_domain_persists_article_metadata(tmp_path: Path, mo
         captured["article_defaults"] = {"url": url, "defaults": defaults}
         return SimpleNamespace(id=1), True
 
-    monkeypatch.setattr("news_admin.apps.articles.models.ArticleImportRun.objects.create", fake_create)
-    monkeypatch.setattr(article_services.Article.objects, "filter", lambda url: FakeArticleQuerySet())
-    monkeypatch.setattr(article_services.Article.objects, "update_or_create", fake_update_or_create)
+    monkeypatch.setattr(
+        "news_admin.apps.articles.models.ArticleImportRun.objects.create", fake_create
+    )
+    monkeypatch.setattr(
+        article_services.Article.objects, "filter", lambda url: FakeArticleQuerySet()
+    )
+    monkeypatch.setattr(
+        article_services.Article.objects, "update_or_create", fake_update_or_create
+    )
     monkeypatch.setattr(
         article_services,
         "get_settings",
@@ -88,7 +98,9 @@ def test_import_articles_for_domain_persists_article_metadata(tmp_path: Path, mo
     assert result["created"] == 1
 
 
-def test_refresh_article_from_source_persists_article_metadata(tmp_path: Path, monkeypatch) -> None:
+def test_refresh_article_from_source_persists_article_metadata(
+    tmp_path: Path, monkeypatch
+) -> None:
     scraped_dir = tmp_path / "scraped"
     content_dir = tmp_path / "content"
     html_path = scraped_dir / "kompas.com" / "article_html" / "sample.html"
@@ -145,7 +157,9 @@ def test_refresh_article_from_source_persists_article_metadata(tmp_path: Path, m
         char_count=11,
         published_at=None,
         scraped_at=None,
-        save=lambda update_fields=None: captured.setdefault("save_calls", []).append(list(update_fields or [])),
+        save=lambda update_fields=None: captured.setdefault("save_calls", []).append(
+            list(update_fields or [])
+        ),
     )
 
     monkeypatch.setattr(
@@ -153,7 +167,9 @@ def test_refresh_article_from_source_persists_article_metadata(tmp_path: Path, m
         "get_settings",
         lambda: SimpleNamespace(content_dir=content_dir, scraped_dir=scraped_dir),
     )
-    monkeypatch.setattr(article_services, "load_site", lambda site_domain, settings: FakeSite())
+    monkeypatch.setattr(
+        article_services, "load_site", lambda site_domain, settings: FakeSite()
+    )
 
     result = article_services.refresh_article_from_source(article)
 

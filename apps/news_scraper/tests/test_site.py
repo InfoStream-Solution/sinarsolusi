@@ -7,11 +7,11 @@ import pytest
 
 import news_scraper_core.sites.base as base_module
 from news_scraper_core.config import Settings
+from news_scraper_core.site_loader import load_site
 from news_scraper_core.sites.base import BaseSite
 from news_scraper_core.sites.beritasatu_com import BeritasatuComSite
 from news_scraper_core.sites.detik_com import DetikComSite
 from news_scraper_core.sites.kompas_com import KompasComSite
-from news_scraper_core.site_loader import load_site
 
 
 @pytest.fixture
@@ -54,23 +54,33 @@ def test_base_site_uses_instance_patterns(article_site: BaseSite) -> None:
     assert not article_site.is_article_url("https://example.com/news/123")
 
 
-def test_base_site_builds_paths_and_options(base_site: BaseSite, settings: Settings) -> None:
+def test_base_site_builds_paths_and_options(
+    base_site: BaseSite, settings: Settings
+) -> None:
     assert base_site.logger_name == "site.example.com"
     assert base_site.link_allowed_hosts == {"example.com"}
-    assert base_site.normalize_url("https://example.com/a#frag") == "https://example.com/a#frag"
-    assert base_site.normalize_article_url("https://example.com/a#frag") == "https://example.com/a#frag"
-    assert base_site.article_slug("https://example.com/articles/deep-dive/") == "deep-dive"
+    assert (
+        base_site.normalize_url("https://example.com/a#frag")
+        == "https://example.com/a#frag"
+    )
+    assert (
+        base_site.normalize_article_url("https://example.com/a#frag")
+        == "https://example.com/a#frag"
+    )
+    assert (
+        base_site.article_slug("https://example.com/articles/deep-dive/") == "deep-dive"
+    )
     assert base_site.article_slug("https://example.com/") == "article"
     assert base_site.output_path == settings.seed_dir / "example.com.seed"
-    assert base_site.scraped_article_output_path("https://example.com/articles/deep-dive") == (
-        settings.scraped_dir / "example.com" / "article_html" / "deep-dive.html"
-    )
+    assert base_site.scraped_article_output_path(
+        "https://example.com/articles/deep-dive"
+    ) == (settings.scraped_dir / "example.com" / "article_html" / "deep-dive.html")
     assert base_site.article_output_path("https://example.com/articles/deep-dive") == (
         settings.content_dir / "news_article" / "example.com" / "deep-dive.json"
     )
-    assert base_site.article_markdown_output_path("https://example.com/articles/deep-dive") == (
-        settings.content_dir / "news_article" / "example.com" / "deep-dive.md"
-    )
+    assert base_site.article_markdown_output_path(
+        "https://example.com/articles/deep-dive"
+    ) == (settings.content_dir / "news_article" / "example.com" / "deep-dive.md")
 
     options = base_site.build_options()
     assert options.url == "https://example.com"
@@ -105,9 +115,16 @@ def test_base_site_default_parsed_content_and_save(settings: Settings) -> None:
     assert article.scraped_at
 
     output_path = site.save_parsed_article(article, article.url)
-    assert output_path == settings.content_dir / "news_article" / "example.com" / "deep-dive.json"
+    assert (
+        output_path
+        == settings.content_dir / "news_article" / "example.com" / "deep-dive.json"
+    )
     assert output_path.read_text(encoding="utf-8")
-    assert output_path.with_suffix(".md").read_text(encoding="utf-8").startswith("# Example Title")
+    assert (
+        output_path.with_suffix(".md")
+        .read_text(encoding="utf-8")
+        .startswith("# Example Title")
+    )
 
 
 def test_base_site_scrape_article_uses_normalized_url_and_output_path(
@@ -156,7 +173,9 @@ def test_kompas_parser_skips_republished_notice(settings: Settings) -> None:
     </html>
     """
 
-    article = site.parse_article(html, "https://www.kompas.com/read/2026/04/12/123456/example")
+    article = site.parse_article(
+        html, "https://www.kompas.com/read/2026/04/12/123456/example"
+    )
 
     assert "Artikel ini sudah tayang di" not in article.content
     assert article.content == "First paragraph.\n\nSecond paragraph."
@@ -192,12 +211,16 @@ def test_kompas_parser_handles_diperbarui_time_layout(settings: Settings) -> Non
     </html>
     """
 
-    article = site.parse_article(html, "https://www.kompas.com/read/2026/04/18/100300/example-title")
+    article = site.parse_article(
+        html, "https://www.kompas.com/read/2026/04/18/100300/example-title"
+    )
 
     assert article.published_at == "18/04/2026, 10:03 WIB"
 
 
-def test_kompas_parser_strips_source_prefix_from_published_at(settings: Settings) -> None:
+def test_kompas_parser_strips_source_prefix_from_published_at(
+    settings: Settings,
+) -> None:
     site = KompasComSite(settings)
     html = """
     <html>
@@ -225,7 +248,9 @@ def test_kompas_parser_strips_source_prefix_from_published_at(settings: Settings
     </html>
     """
 
-    article = site.parse_article(html, "https://www.kompas.com/read/2026/04/17/10304621/example-title")
+    article = site.parse_article(
+        html, "https://www.kompas.com/read/2026/04/17/10304621/example-title"
+    )
 
     assert article.published_at == "17 April 2026, 10:30 WIB"
 
@@ -264,12 +289,16 @@ def test_kompas_parser_joins_multiple_authors(settings: Settings) -> None:
     </html>
     """
 
-    article = site.parse_article(html, "https://money.kompas.com/read/2026/04/11/183737026/example?page=all")
+    article = site.parse_article(
+        html, "https://money.kompas.com/read/2026/04/11/183737026/example?page=all"
+    )
 
     assert article.author == "Melvina Tionardus, Yunanto Wiji Utomo"
 
 
-def test_kompas_parser_uses_name_editors_even_without_penulis_label(settings: Settings) -> None:
+def test_kompas_parser_uses_name_editors_even_without_penulis_label(
+    settings: Settings,
+) -> None:
     site = KompasComSite(settings)
     html = """
     <html>
@@ -303,12 +332,16 @@ def test_kompas_parser_uses_name_editors_even_without_penulis_label(settings: Se
     </html>
     """
 
-    article = site.parse_article(html, "https://www.kompas.com/edu/read/2026/04/18/120300971/example?page=all")
+    article = site.parse_article(
+        html, "https://www.kompas.com/edu/read/2026/04/18/120300971/example?page=all"
+    )
 
     assert article.author == "Melvina Tionardus, Yunanto Wiji Utomo"
 
 
-def test_kompas_parser_prefers_penulis_from_credit_author_modal(settings: Settings) -> None:
+def test_kompas_parser_prefers_penulis_from_credit_author_modal(
+    settings: Settings,
+) -> None:
     site = KompasComSite(settings)
     html = """
     <html>
@@ -364,7 +397,9 @@ def test_kompas_parser_prefers_penulis_from_credit_author_modal(settings: Settin
     </html>
     """
 
-    article = site.parse_article(html, "https://www.kompas.com/edu/read/2026/04/18/120300971/example?page=all")
+    article = site.parse_article(
+        html, "https://www.kompas.com/edu/read/2026/04/18/120300971/example?page=all"
+    )
 
     assert article.author == "Melvina Tionardus"
 
@@ -400,7 +435,9 @@ def test_kompas_parser_uses_opinion_link_author(settings: Settings) -> None:
     </html>
     """
 
-    article = site.parse_article(html, "https://kolom.kompas.com/read/2026/04/18/120300971/example?page=all")
+    article = site.parse_article(
+        html, "https://kolom.kompas.com/read/2026/04/18/120300971/example?page=all"
+    )
 
     assert article.author == "Mudhofir Abdullah"
 
@@ -408,7 +445,9 @@ def test_kompas_parser_uses_opinion_link_author(settings: Settings) -> None:
 def test_kompas_site_matches_article_urls(settings: Settings) -> None:
     site = KompasComSite(settings)
 
-    assert site.is_article_url("https://www.kompas.com/tekno/read/2024/01/01/123456789/example")
+    assert site.is_article_url(
+        "https://www.kompas.com/tekno/read/2024/01/01/123456789/example"
+    )
     assert site.is_article_url(
         "https://nasional.kompas.com/read/2026/04/11/13541301/kenakan-beskap-dan-peci-hitam-prabowo-hadiri-munas-xvi-pb-ipsi"
     )
@@ -565,7 +604,10 @@ def test_detik_site_uses_plain_header_date_text(settings: Settings) -> None:
     </html>
     """
 
-    article = site.parse_article(html, "https://www.detik.com/bali/berita/d-8449026/menteri-hanif-sebut-baru-denpasar-badung-yang-serius-pilah-sampah?page=all")
+    article = site.parse_article(
+        html,
+        "https://www.detik.com/bali/berita/d-8449026/menteri-hanif-sebut-baru-denpasar-badung-yang-serius-pilah-sampah?page=all",
+    )
 
     assert article.published_at == "Jumat, 17 Apr 2026 16:36 WIB"
 
@@ -589,7 +631,9 @@ def test_detik_site_uses_page_breadcrumb_category(settings: Settings) -> None:
     </html>
     """
 
-    article = site.parse_article(html, "https://www.detik.com/properti/berita/d-1/example?page=all")
+    article = site.parse_article(
+        html, "https://www.detik.com/properti/berita/d-1/example?page=all"
+    )
 
     assert article.category == "Berita"
 
@@ -646,11 +690,17 @@ def test_beritasatu_site_parses_article_html(settings: Settings) -> None:
         "https://www.beritasatu.com/sport/2984172/dihadiri-prabowo-munas-ipsi-2026-jadi-momentum-konsolidasi-nasional",
     )
 
-    assert article.title == "Dihadiri Prabowo, Munas IPSI 2026 Jadi Momentum Konsolidasi Nasional"
+    assert (
+        article.title
+        == "Dihadiri Prabowo, Munas IPSI 2026 Jadi Momentum Konsolidasi Nasional"
+    )
     assert article.category == "Sport"
     assert article.published_at == "Sabtu, 11 April 2026 | 13:15 WIB"
     assert article.author == "Theressia Sunday Silalahi"
-    assert article.summary == "Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI."
+    assert (
+        article.summary
+        == "Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI."
+    )
     assert article.content == (
         "Presiden Prabowo Subianto dijadwalkan menghadiri Munas IPSI.\n\n"
         "Munas IPSI 2026 menjadi agenda penting."
@@ -717,7 +767,9 @@ def test_beritasatu_site_uses_exact_published_time_selector(settings: Settings) 
     assert article.published_at == "Kamis, 16 April 2026 | 17:47 WIB"
 
 
-def test_beritasatu_site_skips_author_like_small_for_published_at(settings: Settings) -> None:
+def test_beritasatu_site_skips_author_like_small_for_published_at(
+    settings: Settings,
+) -> None:
     site = BeritasatuComSite(settings)
     html = """
     <html>

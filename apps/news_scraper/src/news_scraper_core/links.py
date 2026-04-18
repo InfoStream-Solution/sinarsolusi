@@ -3,13 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
+from urllib.parse import urlparse
 
 from .models import now_iso
-
 
 LINK_PATTERN = re.compile(r"""href=["']([^"'#]+)["']""", re.IGNORECASE)
 
@@ -59,7 +60,9 @@ def extract_internal_links(
             continue
 
         normalized = parsed._replace(fragment="").geturl()
-        discovered.setdefault(normalized, LinkRecord(url=normalized, discovered_at=now_iso()))
+        discovered.setdefault(
+            normalized, LinkRecord(url=normalized, discovered_at=now_iso())
+        )
 
     return sorted(discovered.values(), key=lambda item: item.url)
 
@@ -81,9 +84,13 @@ def normalize_links(
     for link in links:
         normalized_url = normalizer(link.url)
         existing = discovered.get(normalized_url)
-        discovered_at = link.discovered_at if existing is None else min(
-            existing.discovered_at,
-            link.discovered_at,
+        discovered_at = (
+            link.discovered_at
+            if existing is None
+            else min(
+                existing.discovered_at,
+                link.discovered_at,
+            )
         )
         discovered[normalized_url] = LinkRecord(
             url=normalized_url,

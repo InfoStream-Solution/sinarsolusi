@@ -6,7 +6,9 @@ from types import SimpleNamespace
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "news_admin.config.settings")
-os.environ.setdefault("DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data")
+os.environ.setdefault(
+    "DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data"
+)
 django.setup()
 
 import news_admin.apps.articles.admin as article_admin  # noqa: E402
@@ -70,7 +72,9 @@ def test_run_scrape_job_refresh_branch_refreshes_article(monkeypatch) -> None:
             captured.setdefault("save_calls", []).append(list(update_fields or []))
 
     fake_job = FakeJob()
-    fake_article = SimpleNamespace(id=415, url="https://example.test/article", source_site="kompas.com")
+    fake_article = SimpleNamespace(
+        id=415, url="https://example.test/article", source_site="kompas.com"
+    )
 
     monkeypatch.setattr(tasks.ScrapeJob.objects, "get", lambda pk: fake_job)
     monkeypatch.setattr(tasks.Article.objects, "get", lambda pk: fake_article)

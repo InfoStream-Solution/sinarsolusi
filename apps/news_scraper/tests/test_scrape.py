@@ -48,10 +48,14 @@ class DummySite:
         )
 
     def save_parsed_article(self, article: ParsedContent, url: str) -> Path:
-        output_path = self.settings.content_dir / "news_article" / self.domain / "example.json"
+        output_path = (
+            self.settings.content_dir / "news_article" / self.domain / "example.json"
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(article.to_json(), encoding="utf-8")
-        output_path.with_suffix(".md").write_text(article.to_markdown(), encoding="utf-8")
+        output_path.with_suffix(".md").write_text(
+            article.to_markdown(), encoding="utf-8"
+        )
         return output_path
 
     def article_markdown_output_path(self, url: str) -> Path:
@@ -90,8 +94,16 @@ def test_main_writes_same_output_location_as_extract_news(
 ) -> None:
     monkeypatch.setattr(scrape, "get_settings", lambda: settings)
     monkeypatch.setattr(scrape, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(scrape, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
-    monkeypatch.setattr(scrape, "load_site", lambda domain, settings: DummySite(settings))
+    monkeypatch.setattr(
+        scrape,
+        "get_logger",
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
+    )
+    monkeypatch.setattr(
+        scrape, "load_site", lambda domain, settings: DummySite(settings)
+    )
     monkeypatch.setattr(
         scrape,
         "build_parser",
@@ -120,8 +132,16 @@ def test_main_keeps_scraped_when_requested(
 ) -> None:
     monkeypatch.setattr(scrape, "get_settings", lambda: settings)
     monkeypatch.setattr(scrape, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(scrape, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
-    monkeypatch.setattr(scrape, "load_site", lambda domain, settings: DummySite(settings))
+    monkeypatch.setattr(
+        scrape,
+        "get_logger",
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
+    )
+    monkeypatch.setattr(
+        scrape, "load_site", lambda domain, settings: DummySite(settings)
+    )
     monkeypatch.setattr(
         scrape,
         "build_parser",
@@ -146,8 +166,16 @@ def test_main_rejects_non_article_url(
 ) -> None:
     monkeypatch.setattr(scrape, "get_settings", lambda: settings)
     monkeypatch.setattr(scrape, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(scrape, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
-    monkeypatch.setattr(scrape, "load_site", lambda domain, settings: DummySite(settings))
+    monkeypatch.setattr(
+        scrape,
+        "get_logger",
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
+    )
+    monkeypatch.setattr(
+        scrape, "load_site", lambda domain, settings: DummySite(settings)
+    )
     monkeypatch.setattr(
         scrape,
         "build_parser",
