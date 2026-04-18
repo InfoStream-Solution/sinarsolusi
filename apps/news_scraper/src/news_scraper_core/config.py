@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -48,7 +49,6 @@ class Settings:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
 
-
 def _parse_bool(raw_value: str | None, default: bool = False) -> bool:
     if raw_value is None:
         return default
@@ -85,9 +85,7 @@ def get_settings() -> Settings:
 
     app_data_dir = Path(raw_data_dir)
     if not app_data_dir.is_absolute():
-        raise ValueError(
-            f"DATA_DIR must be an absolute path, got {raw_data_dir!r}"
-        )
+        raise ValueError(f"DATA_DIR must be an absolute path, got {raw_data_dir!r}")
 
     seed_dir = app_data_dir / "seed"
     links_dir = app_data_dir / "links"

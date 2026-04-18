@@ -5,7 +5,8 @@ import json
 
 from .config import get_settings
 from .site_loader import load_site
-from .utils import configure_logging, get_logger
+from .utils import configure_logging
+from .utils import get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     return parser
 
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args() if argv is None else parser.parse_args(argv[1:])
@@ -42,7 +44,9 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     if not site.is_article_url(article_url):
-        raise SystemExit(f"{article_url!r} is not a valid article URL for {site.domain}")
+        raise SystemExit(
+            f"{article_url!r} is not a valid article URL for {site.domain}"
+        )
 
     logger.info(
         "scrape_start domain=%r original_url=%r article_url=%r keep_scraped=%r",
@@ -86,7 +90,9 @@ def main(argv: list[str] | None = None) -> None:
         )
         print(json.dumps(payload, indent=2))
     except Exception:
-        logger.exception("scrape_failed domain=%r article_url=%r", site.domain, article_url)
+        logger.exception(
+            "scrape_failed domain=%r article_url=%r", site.domain, article_url
+        )
         raise
 
 

@@ -10,16 +10,20 @@ if __package__ in {None, ""}:
     from news_scraper_core.config import get_settings
     from news_scraper_core.links import read_links
     from news_scraper_core.models import now_iso
-    from news_scraper_core.paths import error_log_path, links_jsonl_path
+    from news_scraper_core.paths import error_log_path
+    from news_scraper_core.paths import links_jsonl_path
     from news_scraper_core.site_loader import load_site
-    from news_scraper_core.utils import configure_logging, get_logger
+    from news_scraper_core.utils import configure_logging
+    from news_scraper_core.utils import get_logger
 else:
     from .config import get_settings
     from .links import read_links
     from .models import now_iso
-    from .paths import error_log_path, links_jsonl_path
+    from .paths import error_log_path
+    from .paths import links_jsonl_path
     from .site_loader import load_site
-    from .utils import configure_logging, get_logger
+    from .utils import configure_logging
+    from .utils import get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,9 +67,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     pending_article_urls = [
-        link.url
-        for link in read_links(links_path)
-        if site.is_article_url(link.url)
+        link.url for link in read_links(links_path) if site.is_article_url(link.url)
     ]
     if args.limit > 0:
         pending_article_urls = pending_article_urls[: args.limit]

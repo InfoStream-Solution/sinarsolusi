@@ -8,6 +8,7 @@ import pytest
 import news_scraper_core.extract_news as extract_news
 import news_scraper_core.seed as seed
 from news_scraper_core.config import Settings
+from news_scraper_core.links import LinkRecord
 from news_scraper_core.links import read_links
 from news_scraper_core.models import ParsedContent
 
@@ -72,25 +73,36 @@ class DummyExtractSite(DummySeedSite):
         )
 
     def save_parsed_article(self, article: ParsedContent, url: str) -> Path:
-        output_path = self.settings.content_dir / "news_article" / self.domain / (
-            f"{url.rsplit('/', 1)[-1]}.json"
+        output_path = (
+            self.settings.content_dir
+            / "news_article"
+            / self.domain
+            / (f"{url.rsplit('/', 1)[-1]}.json")
         )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(article.to_json(), encoding="utf-8")
-        output_path.with_suffix(".md").write_text(article.to_markdown(), encoding="utf-8")
+        output_path.with_suffix(".md").write_text(
+            article.to_markdown(), encoding="utf-8"
+        )
         return output_path
 
     def article_output_path(self, url: str) -> Path:
-        return self.settings.content_dir / "news_article" / self.domain / (
-            f"{url.rsplit('/', 1)[-1]}.json"
+        return (
+            self.settings.content_dir
+            / "news_article"
+            / self.domain
+            / (f"{url.rsplit('/', 1)[-1]}.json")
         )
 
     def scraped_article_dir(self) -> Path:
         return self.settings.scraped_dir / self.domain / "article_html"
 
     def article_markdown_output_path(self, url: str) -> Path:
-        return self.settings.content_dir / "news_article" / self.domain / (
-            f"{url.rsplit('/', 1)[-1]}.md"
+        return (
+            self.settings.content_dir
+            / "news_article"
+            / self.domain
+            / (f"{url.rsplit('/', 1)[-1]}.md")
         )
 
 
@@ -116,12 +128,26 @@ def test_seed_populates_meta_and_preserves_existing_scraped_state(
 ) -> None:
     monkeypatch.setattr(seed, "get_settings", lambda: settings)
     monkeypatch.setattr(seed, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(seed, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None))
-    monkeypatch.setattr(seed, "load_site", lambda domain, settings: DummySeedSite(settings))
+    monkeypatch.setattr(
+        seed,
+        "get_logger",
+        lambda name: SimpleNamespace(info=lambda *args, **kwargs: None),
+    )
+    monkeypatch.setattr(
+        seed, "load_site", lambda domain, settings: DummySeedSite(settings)
+    )
+    monkeypatch.setattr(
+        seed,
+        "_register_discovered_hosts",
+        lambda domain, hosts: {"created": 0, "skipped": len(hosts)},
+    )
+    monkeypatch.setattr(seed, "_load_additional_allowed_hosts", lambda domain: set())
     monkeypatch.setattr(
         seed,
         "build_parser",
-        lambda: SimpleNamespace(parse_args=lambda: SimpleNamespace(domain="example.com", keep_seed=True)),
+        lambda: SimpleNamespace(
+            parse_args=lambda: SimpleNamespace(domain="example.com", keep_seed=True)
+        ),
     )
 
     seed.main()
@@ -135,18 +161,89 @@ def test_seed_populates_meta_and_preserves_existing_scraped_state(
     assert all(link.discovered_at for link in links)
 
 
+def test_seed_merges_additional_allowed_hosts(
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class HostAwareSeedSite(DummySeedSite):
+        link_allowed_hosts = {"example.com"}
+
+    monkeypatch.setattr(seed, "get_settings", lambda: settings)
+    monkeypatch.setattr(seed, "configure_logging", lambda debug: None)
+    monkeypatch.setattr(
+        seed,
+        "get_logger",
+        lambda name: SimpleNamespace(info=lambda *args, **kwargs: None),
+    )
+    monkeypatch.setattr(
+        seed, "load_site", lambda domain, settings: HostAwareSeedSite(settings)
+    )
+    monkeypatch.setattr(
+        seed, "_load_additional_allowed_hosts", lambda domain: {"news.example.com"}
+    )
+    monkeypatch.setattr(
+        seed,
+        "_register_discovered_hosts",
+        lambda domain, hosts: (
+            captured.__setitem__("registered_hosts", set(hosts))
+            or {"created": len(hosts), "skipped": 0}
+        ),
+    )
+    monkeypatch.setattr(seed, "write_links", lambda path, links: None)
+    monkeypatch.setattr(seed, "normalize_links", lambda links, normalizer: links)
+    monkeypatch.setattr(
+        seed,
+        "extract_domain_links",
+        lambda seed_url, html: [
+            LinkRecord(
+                url="https://example.com/news/a",
+                discovered_at="2026-04-11T00:00:00+07:00",
+            ),
+            LinkRecord(
+                url="https://news.example.com/news/b",
+                discovered_at="2026-04-11T00:00:00+07:00",
+            ),
+        ],
+    )
+    monkeypatch.setattr(
+        seed,
+        "build_parser",
+        lambda: SimpleNamespace(
+            parse_args=lambda: SimpleNamespace(domain="example.com", keep_seed=True)
+        ),
+    )
+
+    seed.main()
+
+    assert captured["registered_hosts"] == {"example.com", "news.example.com"}
+
+
 def test_extract_news_updates_meta_on_success_and_failure(
     settings: Settings,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(extract_news, "get_settings", lambda: settings)
     monkeypatch.setattr(extract_news, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(extract_news, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
-    monkeypatch.setattr(extract_news, "load_site", lambda domain, settings: DummyExtractSite(settings))
+    monkeypatch.setattr(
+        extract_news,
+        "get_logger",
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
+    )
+    monkeypatch.setattr(
+        extract_news, "load_site", lambda domain, settings: DummyExtractSite(settings)
+    )
     monkeypatch.setattr(
         extract_news,
         "build_parser",
-        lambda: SimpleNamespace(parse_args=lambda: SimpleNamespace(domain="example.com", limit=0, keep_scraped=True)),
+        lambda: SimpleNamespace(
+            parse_args=lambda: SimpleNamespace(
+                domain="example.com", limit=0, keep_scraped=True
+            )
+        ),
     )
 
     links_path = settings.links_dir / "example.com.jsonl"
@@ -166,7 +263,9 @@ def test_extract_news_updates_meta_on_success_and_failure(
 
     assert (settings.content_dir / "news_article" / "example.com" / "a.json").exists()
     assert (settings.content_dir / "news_article" / "example.com" / "a.md").exists()
-    assert (settings.content_dir / "errors" / "example.com" / "extract-news.jsonl").exists()
+    assert (
+        settings.content_dir / "errors" / "example.com" / "extract-news.jsonl"
+    ).exists()
 
 
 def test_extract_news_skips_existing_parsed_articles(
@@ -175,16 +274,30 @@ def test_extract_news_skips_existing_parsed_articles(
 ) -> None:
     class SkipOnScrapeSite(DummyExtractSite):
         def scrape_article(self, url: str) -> None:
-            raise AssertionError("scrape_article should not be called for existing output")
+            raise AssertionError(
+                "scrape_article should not be called for existing output"
+            )
 
     monkeypatch.setattr(extract_news, "get_settings", lambda: settings)
     monkeypatch.setattr(extract_news, "configure_logging", lambda debug: None)
-    monkeypatch.setattr(extract_news, "get_logger", lambda name: SimpleNamespace(info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None))
-    monkeypatch.setattr(extract_news, "load_site", lambda domain, settings: SkipOnScrapeSite(settings))
+    monkeypatch.setattr(
+        extract_news,
+        "get_logger",
+        lambda name: SimpleNamespace(
+            info=lambda *args, **kwargs: None, exception=lambda *args, **kwargs: None
+        ),
+    )
+    monkeypatch.setattr(
+        extract_news, "load_site", lambda domain, settings: SkipOnScrapeSite(settings)
+    )
     monkeypatch.setattr(
         extract_news,
         "build_parser",
-        lambda: SimpleNamespace(parse_args=lambda: SimpleNamespace(domain="example.com", limit=0, keep_scraped=True)),
+        lambda: SimpleNamespace(
+            parse_args=lambda: SimpleNamespace(
+                domain="example.com", limit=0, keep_scraped=True
+            )
+        ),
     )
 
     existing_json = settings.content_dir / "news_article" / "example.com" / "a.json"

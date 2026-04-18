@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from news_scraper_core.links import (
-    LinkRecord,
-    extract_internal_links,
-    normalize_links,
-    page_output_name,
-    read_links,
-    write_links,
-)
+from news_scraper_core.links import LinkRecord
+from news_scraper_core.links import extract_domain_links
+from news_scraper_core.links import extract_internal_links
+from news_scraper_core.links import normalize_links
+from news_scraper_core.links import page_output_name
+from news_scraper_core.links import read_links
+from news_scraper_core.links import write_links
 
 
 def test_extract_internal_links_filters_and_deduplicates() -> None:
@@ -34,11 +33,33 @@ def test_extract_internal_links_filters_and_deduplicates() -> None:
     assert all(link.discovered_at for link in links)
 
 
+def test_extract_domain_links_includes_subdomains_under_seed_domain() -> None:
+    html = """
+    <a href="/news/a#section">A</a>
+    <a href="https://www.example.com/news/a">dup</a>
+    <a href="https://news.example.com/news/b">B</a>
+    <a href="https://other.example.com/news/c">C</a>
+    <a href="https://not-example.com/news/d">D</a>
+    """
+
+    links = extract_domain_links("https://www.example.com", html)
+
+    assert [link.url for link in links] == [
+        "https://news.example.com/news/b",
+        "https://other.example.com/news/c",
+        "https://www.example.com/news/a",
+    ]
+
+
 def test_write_read_and_mark_links(tmp_path: Path) -> None:
     path = tmp_path / "links.jsonl"
     links = [
-        LinkRecord(url="https://example.com/a", discovered_at="2026-04-11T00:00:00+07:00"),
-        LinkRecord(url="https://example.com/b", discovered_at="2026-04-11T00:01:00+07:00"),
+        LinkRecord(
+            url="https://example.com/a", discovered_at="2026-04-11T00:00:00+07:00"
+        ),
+        LinkRecord(
+            url="https://example.com/b", discovered_at="2026-04-11T00:01:00+07:00"
+        ),
     ]
 
     write_links(path, links)
@@ -47,16 +68,26 @@ def test_write_read_and_mark_links(tmp_path: Path) -> None:
 
 def test_normalize_links_merges_scraped_state() -> None:
     links = [
-        LinkRecord(url="https://example.com/a#one", discovered_at="2026-04-11T00:00:00+07:00"),
-        LinkRecord(url="https://example.com/a#two", discovered_at="2026-04-11T00:01:00+07:00"),
-        LinkRecord(url="https://example.com/b", discovered_at="2026-04-11T00:02:00+07:00"),
+        LinkRecord(
+            url="https://example.com/a#one", discovered_at="2026-04-11T00:00:00+07:00"
+        ),
+        LinkRecord(
+            url="https://example.com/a#two", discovered_at="2026-04-11T00:01:00+07:00"
+        ),
+        LinkRecord(
+            url="https://example.com/b", discovered_at="2026-04-11T00:02:00+07:00"
+        ),
     ]
 
     normalized = normalize_links(links, lambda url: url.split("#", 1)[0])
 
     assert normalized == [
-        LinkRecord(url="https://example.com/a", discovered_at="2026-04-11T00:00:00+07:00"),
-        LinkRecord(url="https://example.com/b", discovered_at="2026-04-11T00:02:00+07:00"),
+        LinkRecord(
+            url="https://example.com/a", discovered_at="2026-04-11T00:00:00+07:00"
+        ),
+        LinkRecord(
+            url="https://example.com/b", discovered_at="2026-04-11T00:02:00+07:00"
+        ),
     ]
 
 

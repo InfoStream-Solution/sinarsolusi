@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from urllib.parse import parse_qsl, urlencode, urlparse
+from dataclasses import dataclass
+from urllib.parse import parse_qsl
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 
 import justhtml
 
 from ..config import Settings
 from ..models import ParsedContent
 from .base import BaseSite
-
 
 ARTICLE_PATH_PATTERNS = (
     re.compile(r"^/[a-z-]+/\d+/.+$"),

@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from urllib.parse import parse_qsl, urlencode, urlparse
+from dataclasses import dataclass
+from urllib.parse import parse_qsl
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 
 import justhtml
 
-from ..models import ParsedContent
 from ..config import Settings
-
+from ..models import ParsedContent
 from .base import BaseSite
-
 
 ARTICLE_PATH_PATTERNS = (
     re.compile(r"^/[^/]+/read/\d{4}/\d{2}/\d{2}/\d+/[^/]+$"),
@@ -39,7 +39,7 @@ class KompasComSite(BaseSite):
                 "news.kompas.com",
                 "edukasi.kompas.com",
                 "megapolitan.kompas.com",
-                "nasional.kompas.com"
+                "nasional.kompas.com",
             },
             article_path_patterns=ARTICLE_PATH_PATTERNS,
         )
@@ -79,7 +79,10 @@ class KompasComSite(BaseSite):
         return self.article_slug(url).replace("-", " ")
 
     def _extract_category(self, root: justhtml.Document) -> str | None:
-        breadcrumbs = [self._node_text(node) for node in root.query("div.breadcrumb li a.breadcrumb__link")]
+        breadcrumbs = [
+            self._node_text(node)
+            for node in root.query("div.breadcrumb li a.breadcrumb__link")
+        ]
         breadcrumbs = [item for item in breadcrumbs if item]
         if len(breadcrumbs) >= 2:
             return breadcrumbs[-1]
@@ -108,14 +111,18 @@ class KompasComSite(BaseSite):
         penulis_names: list[str] = []
         for card in root.query(".credit-author"):
             name = self._node_text(card.query_one(".credit-author-name"))
-            position = self._node_text(card.query_one(".credit-author-position")).lower()
+            position = self._node_text(
+                card.query_one(".credit-author-position")
+            ).lower()
             if not name or "penulis" not in position:
                 continue
             penulis_names.append(name.rstrip(",").strip())
         if penulis_names:
             return ", ".join(penulis_names)
 
-        names = [self._node_text(node) for node in root.query(".credit-title-nameEditor")]
+        names = [
+            self._node_text(node) for node in root.query(".credit-title-nameEditor")
+        ]
         names = [name.rstrip(",").strip() for name in names if name]
         if names:
             return ", ".join(names)

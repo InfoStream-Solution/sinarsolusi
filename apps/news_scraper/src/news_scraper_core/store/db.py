@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 import psycopg
 from psycopg.rows import dict_row
 
-from .base import BaseStore
 from ..links import LinkMetaRecord
+from .base import BaseStore
 
 
 class DbStore(BaseStore):
@@ -26,7 +26,9 @@ class DbStore(BaseStore):
         raise ValueError(f"Unsupported database URL: {database_url}")
 
     def _schema_path(self) -> Path:
-        filename = "schema.postgres.sql" if self.backend == "postgres" else "schema.sqlite.sql"
+        filename = (
+            "schema.postgres.sql" if self.backend == "postgres" else "schema.sqlite.sql"
+        )
         return Path(__file__).with_name(filename)
 
     def _connect_sqlite(self) -> sqlite3.Connection:
@@ -48,7 +50,9 @@ class DbStore(BaseStore):
     def _initialize(self) -> None:
         schema_path = self._schema_path()
         schema = schema_path.read_text(encoding="utf-8")
-        statements = [statement.strip() for statement in schema.split(";") if statement.strip()]
+        statements = [
+            statement.strip() for statement in schema.split(";") if statement.strip()
+        ]
         with self._connect() as connection:
             if self.backend == "postgres":
                 connection.execute("SET lock_timeout = '5s'")
@@ -67,9 +71,13 @@ class DbStore(BaseStore):
             return
 
         if self.backend == "postgres":
-            self._upsert_discovered_links_postgres(domain, urls, discovered_at=discovered_at)
+            self._upsert_discovered_links_postgres(
+                domain, urls, discovered_at=discovered_at
+            )
         else:
-            self._upsert_discovered_links_sqlite(domain, urls, discovered_at=discovered_at)
+            self._upsert_discovered_links_sqlite(
+                domain, urls, discovered_at=discovered_at
+            )
 
     def _upsert_discovered_links_sqlite(
         self,

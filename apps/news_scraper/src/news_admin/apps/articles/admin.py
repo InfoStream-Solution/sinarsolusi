@@ -1,21 +1,24 @@
 from __future__ import annotations
 
-from django.contrib import admin
-from django.contrib import messages
-from django.db import transaction
-from django.http import HttpRequest, HttpResponseRedirect
-from django.urls import path
-from django.db.models import QuerySet
-from django.utils.html import format_html
 import json
 from urllib.parse import urlparse
 
-from news_scraper_core.config import get_settings
-from news_scraper_core.site_loader import load_site
+from django.contrib import admin
+from django.contrib import messages
+from django.db import transaction
+from django.db.models import QuerySet
+from django.http import HttpRequest
+from django.http import HttpResponseRedirect
+from django.urls import path
+from django.utils.html import format_html
 
 from news_admin.apps.jobs.models import ScrapeJob
 from news_admin.apps.jobs.tasks import run_scrape_job
-from .models import Article, ArticleImportRun
+from news_scraper_core.config import get_settings
+from news_scraper_core.site_loader import load_site
+
+from .models import Article
+from .models import ArticleImportRun
 
 
 class PublishedAtFilter(admin.SimpleListFilter):
@@ -154,10 +157,21 @@ class ArticleAdmin(admin.ModelAdmin):
         "updated_at",
         "created_at",
     )
-    list_filter = ("source_site", CategoryFilter, AuthorFilter, PublishedAtFilter, WordCountFilter)
+    list_filter = (
+        "source_site",
+        CategoryFilter,
+        AuthorFilter,
+        PublishedAtFilter,
+        WordCountFilter,
+    )
     search_fields = ("title", "url", "source_site", "category", "author", "content")
     actions = ["enqueue_scrape_jobs", "refresh_selected_articles"]
-    readonly_fields = ("content_json_path", "content_json_preview", "content_html_path", "content_html_preview")
+    readonly_fields = (
+        "content_json_path",
+        "content_json_preview",
+        "content_html_path",
+        "content_html_preview",
+    )
     change_form_template = "admin/articles/article/change_form.html"
 
     def get_urls(self):
@@ -189,7 +203,9 @@ class ArticleAdmin(admin.ModelAdmin):
             path = site.article_output_path(obj.url)
             payload = json.loads(path.read_text(encoding="utf-8"))
             rendered = json.dumps(payload, indent=2, ensure_ascii=False)
-            return format_html("<pre style='white-space: pre-wrap; margin: 0'>{}</pre>", rendered)
+            return format_html(
+                "<pre style='white-space: pre-wrap; margin: 0'>{}</pre>", rendered
+            )
         except FileNotFoundError:
             return "JSON file not found."
         except Exception as exc:  # pragma: no cover - defensive admin fallback
@@ -214,7 +230,9 @@ class ArticleAdmin(admin.ModelAdmin):
             if not path.exists():
                 path = site.scraped_article_output_path(obj.url)
             html = path.read_text(encoding="utf-8")
-            return format_html("<pre style='white-space: pre-wrap; margin: 0'>{}</pre>", html)
+            return format_html(
+                "<pre style='white-space: pre-wrap; margin: 0'>{}</pre>", html
+            )
         except FileNotFoundError:
             return "Scraped HTML file not found."
         except Exception as exc:  # pragma: no cover - defensive admin fallback
@@ -236,7 +254,9 @@ class ArticleAdmin(admin.ModelAdmin):
         for article in queryset:
             _enqueue_refresh_job(article)
             queued += 1
-        self.message_user(request, f"Queued refresh for {queued} article(s).", level=messages.SUCCESS)
+        self.message_user(
+            request, f"Queued refresh for {queued} article(s).", level=messages.SUCCESS
+        )
 
     def refresh_article_view(self, request: HttpRequest, object_id: str):
         article = self.get_object(request, object_id)

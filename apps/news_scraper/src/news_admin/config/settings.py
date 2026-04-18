@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve().parents[3]
 SRC_DIR = BASE_DIR / "src"
 
@@ -25,7 +24,9 @@ _load_dotenv()
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-dev-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = [host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if host]
+ALLOWED_HOSTS = [
+    host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if host
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

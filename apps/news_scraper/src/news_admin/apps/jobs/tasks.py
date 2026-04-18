@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import UTC
+from datetime import datetime
 
 from celery import shared_task
 from django.db import transaction
-
-from news_scraper_core import extract_news, post_news, scrape, seed
 
 from news_admin.apps.articles.models import Article
 from news_admin.apps.articles.services import import_articles_for_domain
 from news_admin.apps.articles.services import refresh_article_from_source
 from news_admin.apps.sources.models import SourceSite
+from news_scraper_core import extract_news
+from news_scraper_core import post_news
+from news_scraper_core import scrape
+from news_scraper_core import seed
+
 from .models import ScrapeJob
 
 
@@ -34,7 +38,9 @@ def _mark_job_failed(job: ScrapeJob, exc: Exception) -> None:
     job.save(update_fields=["status", "error_message", "finished_at"])
 
 
-def _enqueue_job(job_type: str, domain: str, *, params: dict[str, object] | None = None) -> ScrapeJob:
+def _enqueue_job(
+    job_type: str, domain: str, *, params: dict[str, object] | None = None
+) -> ScrapeJob:
     job = ScrapeJob.objects.create(
         job_type=job_type,
         domain=domain,

@@ -11,8 +11,8 @@ from pydantic import ValidationError
 
 from ..llm_api_client.base import LlmApiClient
 from ..llm_api_client.google import GoogleClient
-from ..llm_api_client.schema import SummaryResponse, SummarizationError
-
+from ..llm_api_client.schema import SummarizationError
+from ..llm_api_client.schema import SummaryResponse
 
 MODEL_NAME = "gemini-2.5-flash"
 

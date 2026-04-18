@@ -6,7 +6,6 @@ from .config import Settings
 from .sites.base import BaseSite
 from .utils import get_logger
 
-
 logger = get_logger("site_loader")
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 
 from ..links import LinkMetaRecord
 
@@ -39,4 +40,3 @@ class BaseStore(ABC):
         error_message: str,
     ) -> None:
         raise NotImplementedError
-

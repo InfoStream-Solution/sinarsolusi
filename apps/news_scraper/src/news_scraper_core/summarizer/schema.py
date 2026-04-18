@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from pydantic import RootModel, model_validator
+from pydantic import RootModel
+from pydantic import model_validator
 
 
 class SummaryResponse(RootModel[list[str]]):

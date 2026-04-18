@@ -12,7 +12,9 @@ class ArticleImportRun(models.Model):
 
     domain = models.CharField(max_length=255)
     content_dir = models.CharField(max_length=500)
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.QUEUED)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.QUEUED
+    )
     scanned_files = models.PositiveIntegerField(default=0)
     created_count = models.PositiveIntegerField(default=0)
     updated_count = models.PositiveIntegerField(default=0)

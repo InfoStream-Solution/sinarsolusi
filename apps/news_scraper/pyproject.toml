@@ -30,6 +30,7 @@ extract-news = "news_scraper_core.extract_news:main"
 scrape = "news_scraper_core.scrape:main"
 post-news = "news_scraper_core.post_news:main"
 summarize = "news_scraper_core.summarizer:main"
+pre-commit = "src.pre_commit:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -40,6 +41,12 @@ package = true
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
 
 [tool.pytest.ini_options]
 addopts = "--cov-fail-under=49"

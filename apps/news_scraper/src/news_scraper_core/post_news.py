@@ -3,15 +3,21 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime, timedelta, timezone
+from dataclasses import asdict
+from dataclasses import dataclass
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 from urllib import request
 
 from .config import get_settings
 from .models import ParsedContent
-from .paths import error_log_path, parsed_articles_dir
-from .utils import configure_logging, get_logger
+from .paths import error_log_path
+from .paths import parsed_articles_dir
+from .utils import configure_logging
+from .utils import get_logger
 
 
 @dataclass(frozen=True)
@@ -105,7 +111,9 @@ def normalize_published_at(published_at: str | None) -> str | None:
 
     try:
         raw_value = re.sub(r"\s+", " ", raw_value).strip()
-        raw_value = raw_value.replace("WIB", "").replace("WITA", "").replace("WIT", "").strip()
+        raw_value = (
+            raw_value.replace("WIB", "").replace("WITA", "").replace("WIT", "").strip()
+        )
         raw_value = re.sub(r"\s*\|\s*", ", ", raw_value)
         match = re.fullmatch(
             r"(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})(?:,\s*|\s+)(?P<hour>\d{1,2}):(?P<minute>\d{2})(?:\s*WIB)?",
@@ -210,7 +218,9 @@ def save_posted_record(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     record = PostedRecord(url=url, posted_at=now_iso(), response_status=response_status)
-    path.write_text(json.dumps(asdict(record), indent=2, ensure_ascii=False), encoding="utf-8")
+    path.write_text(
+        json.dumps(asdict(record), indent=2, ensure_ascii=False), encoding="utf-8"
+    )
 
 
 def log_dry_run(
