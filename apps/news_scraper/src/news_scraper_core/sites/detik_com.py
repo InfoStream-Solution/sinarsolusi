@@ -16,6 +16,9 @@ ARTICLE_PATH_PATTERNS = (
     re.compile(r"^/(?:berita|edu|jabar|jateng|jatim|jogja|oto|sport|travel|food|health|finance|hot|inet|wolipop)/d-\d+/.+$"),
 )
 WHITESPACE_PATTERN = re.compile(r"\s+")
+DATE_TEXT_PATTERN = re.compile(
+    r"\b(?:Senin|Selasa|Rabu|Kamis|Jumat|Sabtu|Minggu),\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}\s+\d{2}:\d{2}\s+WIB\b"
+)
 
 
 @dataclass
@@ -61,6 +64,29 @@ class DetikComSite(BaseSite):
             return self._clean_text(to_text(separator=" ", separator_blocks_only=True))
         return ""
 
+    def _extract_from_raw_html(self, html: str, selector_name: str) -> str | None:
+        pattern = re.compile(
+            r"<time\b[^>]*class\s*=\s*([\"'])(?P<class>[^\"']*)\1[^>]*>(?P<value>.*?)</time>",
+            re.IGNORECASE | re.DOTALL,
+        )
+        for match in pattern.finditer(html):
+            classes = match.group("class")
+            if selector_name not in classes:
+                continue
+            value = re.sub(r"<[^>]+>", " ", match.group("value"))
+            value = self._clean_text(value)
+            if value and DATE_TEXT_PATTERN.search(value):
+                return value
+        return None
+
+    def _extract_date_from_raw_html(self, html: str) -> str | None:
+        stripped = re.sub(r"<[^>]+>", " ", html)
+        stripped = self._clean_text(stripped)
+        match = DATE_TEXT_PATTERN.search(stripped)
+        if match is not None:
+            return match.group(0)
+        return None
+
     def normalize_article_url(self, url: str) -> str:
         normalized = self.normalize_url(url)
         parsed = urlparse(normalized)
@@ -84,24 +110,51 @@ class DetikComSite(BaseSite):
         return self.article_slug(url).replace("-", " ")
 
     def _extract_category(self, root: justhtml.Document) -> str | None:
-        breadcrumb = self._node_text(root.query_one("a.breadcrumb__link"))
-        return breadcrumb or None
+        selectors = [
+            "a.breadcrumb__link",
+            "div.page__breadcrumb a",
+            "nav.breadcrumb a",
+            "div.breadcrumb a",
+        ]
+        for selector in selectors:
+            breadcrumbs = [self._node_text(node) for node in root.query(selector)]
+            breadcrumbs = [item for item in breadcrumbs if item]
+            if breadcrumbs:
+                return breadcrumbs[-1]
+        return None
 
-    def _extract_published_at(self, root: justhtml.Document) -> str | None:
+    def _extract_published_at(self, html: str, root: justhtml.Document) -> str | None:
         candidates = [
+            "body > div.mx-auto.w-full.max-w-default.flex-1.pt-5 > div > div:nth-child(1) > main > article > div.mt-1 > div > div:nth-child(1) > time",
+            "time.text-black-light3",
             "div.detail__date",
             "div.detail__date-time",
             "div.detail__dateinfo",
             "div.detail__date__wrap",
+            "time",
         ]
         for selector in candidates:
             rendered = self._node_text(root.query_one(selector))
             if rendered:
                 return rendered
+        for selector_name in (
+            "text-black-light3",
+            "detail__date",
+            "detail__date-time",
+            "detail__dateinfo",
+            "detail__date__wrap",
+        ):
+            rendered = self._extract_from_raw_html(html, selector_name)
+            if rendered:
+                return rendered
+        rendered = self._extract_date_from_raw_html(html)
+        if rendered:
+            return rendered
         return None
 
     def _extract_author(self, root: justhtml.Document) -> str | None:
         candidates = [
+            "div.mt-1 p",
             "div.detail__author",
             "div.detail__author a",
             "span.detail__author",
@@ -109,8 +162,22 @@ class DetikComSite(BaseSite):
         for selector in candidates:
             author = self._node_text(root.query_one(selector))
             if author:
-                return author
+                author = self._clean_author(author)
+                if author:
+                    return author
         return None
+
+    def _clean_author(self, value: str) -> str | None:
+        author = self._clean_text(value)
+        if not author:
+            return None
+        if author.startswith("Penulis:"):
+            author = author.split("Penulis:", 1)[1].strip()
+        if " | " in author:
+            author = author.split(" | ", 1)[0].strip()
+        author = re.sub(r"\s*-\s*detik[^\s]*$", "", author, flags=re.IGNORECASE).strip()
+        author = author.rstrip(",").strip()
+        return author or None
 
     def _extract_content_items(self, root: justhtml.Document) -> list[str]:
         content_root = root.query_one("div.detail__body-text")
@@ -151,7 +218,7 @@ class DetikComSite(BaseSite):
         title = self._extract_title(root, url)
         category = self._extract_category(root)
         author = self._extract_author(root)
-        published_at = self._extract_published_at(root)
+        published_at = self._extract_published_at(html, root)
         items = self._extract_content_items(root)
         content = "\n\n".join(items)
         summary = items[0] if items else None

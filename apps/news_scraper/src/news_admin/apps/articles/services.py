@@ -30,6 +30,16 @@ def _merge_timestamp(existing, new_value):
     return new_value if new_value is not None else existing
 
 
+def _normalize_optional_text(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+    return value
+
+
 def _domain_from_url(url: str) -> str:
     host = urlparse(url).netloc.lower()
     if host.startswith("www."):
@@ -44,7 +54,17 @@ def _resolve_site_domain(article: Article) -> str:
 
 
 def _save_article_timestamp_fields(article: Article, *, published_at, scraped_at) -> None:
-    update_fields = ["url", "title", "source_site", "content", "updated_at"]
+    update_fields = [
+        "url",
+        "title",
+        "source_site",
+        "category",
+        "author",
+        "content",
+        "word_count",
+        "char_count",
+        "updated_at",
+    ]
     if published_at is not None:
         update_fields.append("published_at")
         article.published_at = published_at
@@ -84,15 +104,32 @@ def import_articles_for_domain(domain: str, *, content_dir=None) -> dict[str, in
             payload = json.loads(json_path.read_text(encoding="utf-8"))
             url = payload["url"]
             existing = Article.objects.filter(url=url).first()
+            content = payload.get("content", "")
+            category = _normalize_optional_text(payload.get("category"))
+            author = _normalize_optional_text(payload.get("author"))
             published_at = _to_datetime(payload.get("published_at"))
             scraped_at = _to_datetime(payload.get("scraped_at"))
+            word_count = payload.get("word_count")
+            if word_count is None:
+                word_count = len(str(content).split())
+            char_count = payload.get("char_count")
+            if char_count is None:
+                char_count = len(str(content))
             if existing is not None:
                 published_at = _merge_timestamp(existing.published_at, published_at)
                 scraped_at = _merge_timestamp(existing.scraped_at, scraped_at)
+                category = category if category is not None else existing.category
+                author = author if author is not None else existing.author
+                word_count = word_count if word_count is not None else existing.word_count
+                char_count = char_count if char_count is not None else existing.char_count
             defaults = {
                 "title": payload.get("title", ""),
                 "source_site": payload.get("source_site", domain),
-                "content": payload.get("content", ""),
+                "category": category,
+                "author": author,
+                "content": content,
+                "word_count": word_count,
+                "char_count": char_count,
                 "published_at": published_at,
                 "scraped_at": scraped_at,
             }
@@ -162,6 +199,9 @@ def refresh_article_from_source(article: Article) -> dict[str, object]:
     site.scrape_article(normalized_url)
     html_path = site.scraped_article_output_path(normalized_url)
     html = html_path.read_text(encoding="utf-8")
+    stored_html_path = site.article_html_output_path(normalized_url)
+    stored_html_path.parent.mkdir(parents=True, exist_ok=True)
+    stored_html_path.write_text(html, encoding="utf-8")
     parsed = site.parse_article(html, normalized_url)
     parsed_path = site.save_parsed_article(parsed, normalized_url)
     markdown_path = site.article_markdown_output_path(normalized_url)
@@ -169,17 +209,20 @@ def refresh_article_from_source(article: Article) -> dict[str, object]:
     article.url = normalized_url
     article.title = parsed.title
     article.source_site = parsed.source_site
+    article.category = parsed.category
+    article.author = parsed.author
     article.content = parsed.content
+    article.word_count = parsed.word_count
+    article.char_count = parsed.char_count
     published_at = _to_datetime(parsed.published_at)
     scraped_at = _to_datetime(parsed.scraped_at)
     _save_article_timestamp_fields(article, published_at=published_at, scraped_at=scraped_at)
 
-    if html_path.exists():
-        html_path.unlink()
-
     return {
         "article_id": article.id,
         "url": article.url,
+        "html_path": str(html_path),
+        "stored_html_path": str(stored_html_path),
         "json_path": str(parsed_path),
         "markdown_path": str(markdown_path),
     }

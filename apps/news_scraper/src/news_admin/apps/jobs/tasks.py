@@ -7,7 +7,9 @@ from django.db import transaction
 
 from news_scraper_core import extract_news, post_news, scrape, seed
 
+from news_admin.apps.articles.models import Article
 from news_admin.apps.articles.services import import_articles_for_domain
+from news_admin.apps.articles.services import refresh_article_from_source
 from news_admin.apps.sources.models import SourceSite
 from .models import ScrapeJob
 
@@ -102,6 +104,10 @@ def run_scrape_job(job_id: int) -> dict[str, object]:
         elif job.job_type == ScrapeJob.JobType.SCRAPE:
             url = str(job.params["url"])
             scrape.main(["scrape", job.domain, "--url", url])
+        elif job.job_type == ScrapeJob.JobType.REFRESH:
+            article_id = int(job.params["article_id"])
+            article = Article.objects.get(pk=article_id)
+            import_summary = refresh_article_from_source(article)
         elif job.job_type == ScrapeJob.JobType.IMPORT_ARTICLES:
             import_summary = import_articles_for_domain(job.domain)
         else:

@@ -119,6 +119,9 @@ class BaseSite(LogMixin):
     def article_output_path(self, url: str) -> Path:
         return self.article_output_dir() / f"{self.article_slug(url)}.json"
 
+    def article_html_output_path(self, url: str) -> Path:
+        return self.article_output_dir() / f"{self.article_slug(url)}.html"
+
     def article_markdown_output_path(self, url: str) -> Path:
         return self.article_output_dir() / f"{self.article_slug(url)}.md"
 
