@@ -12,6 +12,7 @@ This directory keeps deployment concerns separate from application source.
 
 - `devops/runtime/news_scraper.compose.yaml` is the server stack definition for `postgres`, `redis`, `web`, `worker`, `beat`, plus the one-off `news-scraper` job service.
 - `devops/scripts/news_scraper.pull.sh` is the pull script for the already-published image.
+- `devops/scripts/news_scraper.migrate.sh` runs Django migrations against the running server stack.
 - `devops/scripts/news_scraper.run.sh` is the runtime script that runs the already-published image with the server runtime stack.
   - With no arguments it defaults to `seed kompas.com`.
   - Pass `extract-news kompas.com` or another command to run a different pipeline step.
@@ -52,6 +53,12 @@ Bring up the long-running server stack with:
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=latest ENV_FILE=/etc/news_scraper.env docker compose -f devops/runtime/news_scraper.compose.yaml up -d
 ```
 
+Apply migrations after the stack is up:
+
+```bash
+IMAGE_TAG=latest ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.migrate.sh
+```
+
 ## Scheduling
 
 - `devops/cron/news_scraper.seed.hourly` is the cron intent file for scheduled seeding.
@@ -88,6 +95,7 @@ cd apps/news_scraper && SOURCE_TAG=local-test PUBLISH_TAG=tagname IMAGE_NAME=ghc
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.run.sh extract-news kompas.com
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env docker compose -f devops/runtime/news_scraper.compose.yaml up -d
+IMAGE_TAG=tagname ENV_FILE=/etc/news_scraper.env ./devops/scripts/news_scraper.migrate.sh
 IMAGE_NAME=ghcr.io/infostream-solution/sinarsolusi_news_scraper IMAGE_TAG=tagname ENV_FILE=../../.env.news_scraper docker compose -f devops/runtime/news_scraper.compose.yaml run --rm news-scraper seed kompas.com
 ./devops/scripts/news_scraper.seed_all.sh
 ./devops/scripts/news_scraper.seed_extract_all.sh
