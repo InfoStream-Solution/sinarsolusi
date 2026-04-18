@@ -9,9 +9,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "news_admin.config.settings")
 os.environ.setdefault("DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data")
 django.setup()
 
-import news_admin.apps.articles.admin as article_admin
-from news_admin.apps.jobs import tasks
-from news_admin.apps.jobs.models import ScrapeJob
+import news_admin.apps.articles.admin as article_admin  # noqa: E402
+from news_admin.apps.jobs import tasks  # noqa: E402
+from news_admin.apps.jobs.models import ScrapeJob  # noqa: E402
 
 
 def test_enqueue_refresh_job_queues_background_run(monkeypatch) -> None:

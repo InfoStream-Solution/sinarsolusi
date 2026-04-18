@@ -10,7 +10,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "news_admin.config.settings")
 os.environ.setdefault("DATA_DIR", "/home/ubuntu/projects/sinarsolusi/apps/news_scraper/.data")
 django.setup()
 
-import news_admin.apps.articles.services as article_services
+import news_admin.apps.articles.services as article_services  # noqa: E402
 
 
 def test_to_datetime_handles_beritasatu_published_at_format() -> None:
