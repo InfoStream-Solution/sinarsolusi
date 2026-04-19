@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import secrets
 
+from django.conf import settings
 from django.http import Http404
 from django.http import HttpRequest
 from django.http import JsonResponse
@@ -30,6 +32,10 @@ def enabled_domain_summaries(request: HttpRequest) -> JsonResponse:
 @require_POST
 @csrf_exempt
 def domain_action(request: HttpRequest) -> JsonResponse:
+    auth_error = _require_service_token(request)
+    if auth_error is not None:
+        return auth_error
+
     payload = _read_json_body(request)
     domain = str(payload.get("domain", "")).strip()
     action = str(payload.get("action", "")).strip()
@@ -61,6 +67,10 @@ def domain_action(request: HttpRequest) -> JsonResponse:
 @require_POST
 @csrf_exempt
 def create_seed_job(request: HttpRequest) -> JsonResponse:
+    auth_error = _require_service_token(request)
+    if auth_error is not None:
+        return auth_error
+
     payload = _read_json_body(request)
     domain = str(payload.get("domain", "")).strip()
 
@@ -107,3 +117,21 @@ def _read_json_body(request: HttpRequest) -> dict[str, object]:
     if isinstance(body, dict):
         return body
     return {}
+
+
+def _require_service_token(request: HttpRequest) -> JsonResponse | None:
+    expected_token = settings.SCRAPER_SERVICE_TOKEN
+    if not expected_token:
+        return JsonResponse(
+            {"error": "SCRAPER_SERVICE_TOKEN is not configured."}, status=503
+        )
+
+    authorization = request.headers.get("Authorization", "").strip()
+    if not authorization.startswith("Bearer "):
+        return JsonResponse({"error": "Missing service token."}, status=401)
+
+    provided_token = authorization.removeprefix("Bearer ").strip()
+    if not secrets.compare_digest(provided_token, expected_token):
+        return JsonResponse({"error": "Invalid service token."}, status=403)
+
+    return None

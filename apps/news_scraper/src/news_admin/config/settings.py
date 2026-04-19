@@ -24,6 +24,9 @@ _load_dotenv()
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-dev-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+SCRAPER_SERVICE_TOKEN = os.environ.get(
+    "SCRAPER_SERVICE_TOKEN", "dev-scraper-service-token"
+).strip()
 ALLOWED_HOSTS = [
     host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if host
 ]

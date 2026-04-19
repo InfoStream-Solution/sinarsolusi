@@ -16,7 +16,8 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 Set `DASHBOARD_USERNAME`, `DASHBOARD_PASSWORD`, `DASHBOARD_SESSION_SECRET`,
-and `SCRAPER_SERVICE_URL` in your local `.env` before starting the app.
+`SCRAPER_SERVICE_URL`, and `SCRAPER_SERVICE_TOKEN` in your local `.env`
+before starting the app. The token must match the scraper service token.
 
 ## Scripts
 

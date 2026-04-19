@@ -20,6 +20,8 @@ django.setup()
 from news_admin.apps.jobs import api_views  # noqa: E402
 from news_admin.apps.jobs.models import ScrapeJob  # noqa: E402
 
+SERVICE_TOKEN = "dev-scraper-service-token"
+
 
 def test_enabled_domains_returns_json(monkeypatch) -> None:
     request = RequestFactory().get("/api/dashboard/domains/")
@@ -80,6 +82,7 @@ def test_domain_action_queues_pipeline(monkeypatch) -> None:
         "/api/dashboard/domains/action/",
         data=json.dumps({"domain": "kompas.com", "action": "pipeline"}),
         content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
     monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
     monkeypatch.setattr(
@@ -95,11 +98,66 @@ def test_domain_action_queues_pipeline(monkeypatch) -> None:
     assert payload == {"queued": True, "domain": "kompas.com", "action": "pipeline"}
 
 
+def test_domain_action_requires_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/domains/action/",
+        data=json.dumps({"domain": "kompas.com", "action": "seed"}),
+        content_type="application/json",
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+
+    response = api_views.domain_action(request)
+
+    assert response.status_code == 401
+    assert json.loads(response.content) == {"error": "Missing service token."}
+
+
+def test_domain_action_rejects_invalid_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/domains/action/",
+        data=json.dumps({"domain": "kompas.com", "action": "seed"}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer wrong-secret",
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+
+    response = api_views.domain_action(request)
+
+    assert response.status_code == 403
+    assert json.loads(response.content) == {"error": "Invalid service token."}
+
+
+def test_domain_action_accepts_valid_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/domains/action/",
+        data=json.dumps({"domain": "kompas.com", "action": "seed"}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer shared-secret",
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+    monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
+    monkeypatch.setattr(
+        api_views,
+        "queue_domain_action",
+        lambda domain, action: {"queued": True, "domain": domain, "action": action},
+    )
+
+    response = api_views.domain_action(request)
+
+    assert response.status_code == 201
+    assert json.loads(response.content) == {
+        "queued": True,
+        "domain": "kompas.com",
+        "action": "seed",
+    }
+
+
 def test_create_seed_job_rejects_empty_domain() -> None:
     request = RequestFactory().post(
         "/api/dashboard/jobs/seed/",
         data=json.dumps({"domain": ""}),
         content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
 
     response = api_views.create_seed_job(request)
@@ -107,11 +165,74 @@ def test_create_seed_job_rejects_empty_domain() -> None:
     assert response.status_code == 400
 
 
+def test_create_seed_job_requires_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/jobs/seed/",
+        data=json.dumps({"domain": "kompas.com"}),
+        content_type="application/json",
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+
+    response = api_views.create_seed_job(request)
+
+    assert response.status_code == 401
+    assert json.loads(response.content) == {"error": "Missing service token."}
+
+
+def test_create_seed_job_rejects_invalid_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/jobs/seed/",
+        data=json.dumps({"domain": "kompas.com"}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer wrong-secret",
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+
+    response = api_views.create_seed_job(request)
+
+    assert response.status_code == 403
+    assert json.loads(response.content) == {"error": "Invalid service token."}
+
+
+def test_create_seed_job_accepts_valid_service_token(monkeypatch) -> None:
+    request = RequestFactory().post(
+        "/api/dashboard/jobs/seed/",
+        data=json.dumps({"domain": "kompas.com"}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer shared-secret",
+    )
+    created_job = SimpleNamespace(
+        id=7,
+        job_type=ScrapeJob.JobType.SEED,
+        domain="kompas.com",
+        status=ScrapeJob.Status.QUEUED,
+        params={},
+        result_summary={},
+        error_message="",
+        created_at=datetime(2026, 4, 19, 10, 30, tzinfo=UTC),
+        started_at=None,
+        finished_at=None,
+    )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
+    monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
+    monkeypatch.setattr(
+        api_views, "queue_seed_job", lambda domain: (created_job, True)
+    )
+
+    response = api_views.create_seed_job(request)
+
+    assert response.status_code == 201
+    payload = json.loads(response.content)
+    assert payload["job_id"] == 7
+    assert payload["created"] is True
+
+
 def test_create_seed_job_queues_background_job(monkeypatch) -> None:
     request = RequestFactory().post(
         "/api/dashboard/jobs/seed/",
         data=json.dumps({"domain": "kompas.com"}),
         content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
     created_job = SimpleNamespace(
         id=7,
