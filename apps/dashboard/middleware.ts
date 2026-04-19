@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSessionCookieName } from "@/lib/session";
+import { getSessionFromCookieValue } from "@/lib/session";
+import { toPublicUrl } from "@/lib/public-url";
+
+const PUBLIC_PATHS = new Set(["/login"]);
+
+function isPublicAsset(pathname: string) {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".")
+  );
+}
+
+function isAuthPath(pathname: string) {
+  return pathname.startsWith("/api/auth/");
+}
+
+async function hasValidSession(request: NextRequest) {
+  return getSessionFromCookieValue(
+    request.cookies.get(getSessionCookieName())?.value,
+  );
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (isPublicAsset(pathname)) {
+    return NextResponse.next();
+  }
+
+  const session = await hasValidSession(request);
+
+  if (PUBLIC_PATHS.has(pathname)) {
+    if (session) {
+      return NextResponse.redirect(toPublicUrl(request, "/dashboard"));
+    }
+    return NextResponse.next();
+  }
+
+  if (isAuthPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (!session) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const loginUrl = toPublicUrl(request, "/login");
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/:path*"],
+};
