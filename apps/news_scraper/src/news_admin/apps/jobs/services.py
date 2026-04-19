@@ -15,14 +15,16 @@ from news_admin.apps.sources.models import SourceSiteHost
 
 def get_enabled_domains() -> list[str]:
     return list(
-        SourceSite.objects.filter(enabled=True).order_by("domain").values_list(
-            "domain", flat=True
-        )
+        SourceSite.objects.filter(enabled=True)
+        .order_by("domain")
+        .values_list("domain", flat=True)
     )
 
 
 def get_domain_summaries() -> list[dict[str, object]]:
-    domains = list(SourceSite.objects.order_by("domain").values_list("domain", flat=True))
+    domains = list(
+        SourceSite.objects.order_by("domain").values_list("domain", flat=True)
+    )
     summaries: list[dict[str, object]] = []
 
     for domain in domains:
@@ -80,9 +82,7 @@ def queue_import_articles_job(domain: str) -> tuple[ScrapeJob, bool]:
     return _queue_job(domain, ScrapeJob.JobType.IMPORT_ARTICLES)
 
 
-def queue_domain_action(
-    domain: str, action: str
-) -> dict[str, object]:
+def queue_domain_action(domain: str, action: str) -> dict[str, object]:
     if action == "seed":
         job, created = queue_seed_job(domain)
         payload = serialize_job(job)

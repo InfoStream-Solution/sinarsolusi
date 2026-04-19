@@ -5,6 +5,7 @@ import { getSessionCookieName } from "@/lib/session";
 import { getSessionMaxAgeSeconds } from "@/lib/session";
 import { validateDashboardCredentials } from "@/lib/session";
 import { normalizeNextPath } from "@/lib/paths";
+import { toPublicUrl } from "@/lib/public-url";
 
 export async function POST(request: NextRequest) {
   const body = await readRequestBody(request);
@@ -14,14 +15,14 @@ export async function POST(request: NextRequest) {
 
   const isValid = await validateDashboardCredentials(username, password);
   if (!isValid) {
-    const url = new URL("/login", request.url);
+    const url = toPublicUrl(request, "/login");
     url.searchParams.set("error", "invalid");
     url.searchParams.set("next", nextValue);
     return NextResponse.redirect(url, 303);
   }
 
   const sessionValue = await createSessionCookie(username);
-  const response = NextResponse.redirect(new URL(nextValue, request.url), 303);
+  const response = NextResponse.redirect(toPublicUrl(request, nextValue), 303);
   response.cookies.set({
     name: getSessionCookieName(),
     value: sessionValue,

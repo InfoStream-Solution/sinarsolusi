@@ -21,7 +21,9 @@ from .services import serialize_job
 @require_GET
 def seed_dashboard(request: HttpRequest) -> HttpResponse:
     domains = get_enabled_domains()
-    form = SeedJobForm(domains=domains, initial={"domain": domains[0] if domains else ""})
+    form = SeedJobForm(
+        domains=domains, initial={"domain": domains[0] if domains else ""}
+    )
     return render(
         request,
         "dashboard/seed_dashboard.html",

@@ -7,9 +7,9 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import django
+import pytest
 from django.http import Http404
 from django.test import RequestFactory
-import pytest
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "news_admin.config.settings")
 os.environ.setdefault(
@@ -215,9 +215,7 @@ def test_create_seed_job_accepts_valid_service_token(monkeypatch) -> None:
     )
     monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", "shared-secret")
     monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
-    monkeypatch.setattr(
-        api_views, "queue_seed_job", lambda domain: (created_job, True)
-    )
+    monkeypatch.setattr(api_views, "queue_seed_job", lambda domain: (created_job, True))
 
     response = api_views.create_seed_job(request)
 
@@ -247,9 +245,7 @@ def test_create_seed_job_queues_background_job(monkeypatch) -> None:
         finished_at=None,
     )
     monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
-    monkeypatch.setattr(
-        api_views, "queue_seed_job", lambda domain: (created_job, True)
-    )
+    monkeypatch.setattr(api_views, "queue_seed_job", lambda domain: (created_job, True))
 
     response = api_views.create_seed_job(request)
 

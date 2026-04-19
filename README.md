@@ -44,3 +44,6 @@ uv run nscraper --source example
 
 For Vercel, set the project Root Directory to `apps/website`.
 Deploy `apps/dashboard` as a separate Next.js app with its own root directory and scraper-service env vars.
+
+For container deployment, build `apps/dashboard/Dockerfile` and run it as a
+separate service from `apps/website` and `apps/news_scraper`.

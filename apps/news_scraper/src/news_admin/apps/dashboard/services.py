@@ -12,9 +12,9 @@ from news_admin.apps.sources.models import SourceSite
 
 def get_enabled_domains() -> list[str]:
     return list(
-        SourceSite.objects.filter(enabled=True).order_by("domain").values_list(
-            "domain", flat=True
-        )
+        SourceSite.objects.filter(enabled=True)
+        .order_by("domain")
+        .values_list("domain", flat=True)
     )
 
 

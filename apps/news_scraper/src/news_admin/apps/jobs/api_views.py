@@ -48,11 +48,7 @@ def domain_action(request: HttpRequest) -> JsonResponse:
     enabled_domains = get_enabled_domains()
     if domain not in enabled_domains:
         return JsonResponse(
-            {
-                "errors": {
-                    "domain": ["Select a valid choice from the enabled domains."]
-                }
-            },
+            {"errors": {"domain": ["Select a valid choice from the enabled domains."]}},
             status=400,
         )
 
@@ -80,11 +76,7 @@ def create_seed_job(request: HttpRequest) -> JsonResponse:
     enabled_domains = get_enabled_domains()
     if domain not in enabled_domains:
         return JsonResponse(
-            {
-                "errors": {
-                    "domain": ["Select a valid choice from the enabled domains."]
-                }
-            },
+            {"errors": {"domain": ["Select a valid choice from the enabled domains."]}},
             status=400,
         )
 

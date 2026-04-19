@@ -27,7 +27,9 @@ def _staff_user() -> SimpleNamespace:
 def test_seed_dashboard_renders_enabled_domains(monkeypatch) -> None:
     request = RequestFactory().get("/dashboard/")
     request.user = _staff_user()
-    monkeypatch.setattr(dashboard_services, "get_enabled_domains", lambda: ["kompas.com"])
+    monkeypatch.setattr(
+        dashboard_services, "get_enabled_domains", lambda: ["kompas.com"]
+    )
     monkeypatch.setattr(dashboard_views, "get_enabled_domains", lambda: ["kompas.com"])
 
     response = dashboard_views.seed_dashboard(request)
@@ -38,9 +40,13 @@ def test_seed_dashboard_renders_enabled_domains(monkeypatch) -> None:
 
 
 def test_create_seed_job_queues_job_and_serializes_payload(monkeypatch) -> None:
-    request = RequestFactory().post("/dashboard/jobs/seed/", data={"domain": "kompas.com"})
+    request = RequestFactory().post(
+        "/dashboard/jobs/seed/", data={"domain": "kompas.com"}
+    )
     request.user = _staff_user()
-    monkeypatch.setattr(dashboard_services, "get_enabled_domains", lambda: ["kompas.com"])
+    monkeypatch.setattr(
+        dashboard_services, "get_enabled_domains", lambda: ["kompas.com"]
+    )
     monkeypatch.setattr(dashboard_views, "get_enabled_domains", lambda: ["kompas.com"])
 
     created_job = SimpleNamespace(
@@ -74,9 +80,13 @@ def test_create_seed_job_queues_job_and_serializes_payload(monkeypatch) -> None:
 
 
 def test_create_seed_job_always_enqueues_a_fresh_job(monkeypatch) -> None:
-    request = RequestFactory().post("/dashboard/jobs/seed/", data={"domain": "kompas.com"})
+    request = RequestFactory().post(
+        "/dashboard/jobs/seed/", data={"domain": "kompas.com"}
+    )
     request.user = _staff_user()
-    monkeypatch.setattr(dashboard_services, "get_enabled_domains", lambda: ["kompas.com"])
+    monkeypatch.setattr(
+        dashboard_services, "get_enabled_domains", lambda: ["kompas.com"]
+    )
     monkeypatch.setattr(dashboard_views, "get_enabled_domains", lambda: ["kompas.com"])
 
     fresh_job = SimpleNamespace(
@@ -92,7 +102,9 @@ def test_create_seed_job_always_enqueues_a_fresh_job(monkeypatch) -> None:
         finished_at=None,
     )
 
-    monkeypatch.setattr(dashboard_views, "queue_seed_job", lambda domain: (fresh_job, True))
+    monkeypatch.setattr(
+        dashboard_views, "queue_seed_job", lambda domain: (fresh_job, True)
+    )
 
     response = dashboard_views.create_seed_job(request)
 
@@ -118,9 +130,7 @@ def test_seed_job_status_serializes_payload(monkeypatch) -> None:
         started_at=datetime(2026, 4, 19, 10, 31, tzinfo=UTC),
         finished_at=datetime(2026, 4, 19, 10, 32, tzinfo=UTC),
     )
-    monkeypatch.setattr(
-        dashboard_views.ScrapeJob.objects, "get", lambda pk: job
-    )
+    monkeypatch.setattr(dashboard_views.ScrapeJob.objects, "get", lambda pk: job)
 
     response = dashboard_views.seed_job_status(request, job_id=7)
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookieName } from "@/lib/session";
 import { getSessionFromCookieValue } from "@/lib/session";
+import { toPublicUrl } from "@/lib/public-url";
 
 const PUBLIC_PATHS = new Set(["/login"]);
 
@@ -33,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   if (PUBLIC_PATHS.has(pathname)) {
     if (session) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(toPublicUrl(request, "/dashboard"));
     }
     return NextResponse.next();
   }
@@ -47,7 +48,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = toPublicUrl(request, "/login");
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
