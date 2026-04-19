@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Seed Dashboard | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div
+    class="module"
+    data-seed-dashboard
+    data-create-url="{% url 'dashboard:seed-job-create' %}"
+    data-status-url-template="{% url 'dashboard:seed-job-status' 0 %}"
+>
+    <h1>Seed Dashboard</h1>
+    <p>Trigger a seed job for an enabled source domain and watch the result update in place.</p>
+
+    <form id="seed-job-form" method="post" action="{% url 'dashboard:seed-job-create' %}">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <label for="{{ form.domain.id_for_label }}">Domain</label>
+                {{ form.domain }}
+            </div>
+            <div class="form-row">
+                <button type="submit" class="default" {% if not has_domains %}disabled{% endif %}>
+                    Run Seed
+                </button>
+            </div>
+        </fieldset>
+    </form>
+
+    {% if not has_domains %}
+    <p>No enabled source domains are available yet.</p>
+    {% endif %}
+
+    <section aria-live="polite">
+        <h2>Result</h2>
+        <div id="seed-job-result" data-job-result>
+            <p>Select a domain and run seed to see job progress here.</p>
+        </div>
+    </section>
+</div>
+
+<script src="{% static 'news_admin/apps/dashboard/seed_dashboard.js' %}" defer></script>
+{% endblock %}

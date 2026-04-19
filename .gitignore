@@ -336,3 +336,5 @@ AGENTS.md
 !/apps/news_scraper/scripts/build_image.sh
 !/apps/news_scraper/scripts/publish_image.sh
 !/apps/news_scraper/scripts/rebuild_and_select.sh
+/apps/dashboard/.next/
+/apps/dashboard/node_modules/

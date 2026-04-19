@@ -41,13 +41,19 @@ def _mark_job_failed(job: ScrapeJob, exc: Exception) -> None:
 def _enqueue_job(
     job_type: str, domain: str, *, params: dict[str, object] | None = None
 ) -> ScrapeJob:
-    job = ScrapeJob.objects.create(
+    job = _create_job(job_type, domain, params=params)
+    transaction.on_commit(lambda job_id=job.id: run_scrape_job.delay(job_id))
+    return job
+
+
+def _create_job(
+    job_type: str, domain: str, *, params: dict[str, object] | None = None
+) -> ScrapeJob:
+    return ScrapeJob.objects.create(
         job_type=job_type,
         domain=domain,
         params=params or {},
     )
-    transaction.on_commit(lambda job_id=job.id: run_scrape_job.delay(job_id))
-    return job
 
 
 @shared_task
@@ -93,6 +99,27 @@ def import_articles_enabled_sources() -> dict[str, object]:
         job = _enqueue_job(ScrapeJob.JobType.IMPORT_ARTICLES, site.domain)
         jobs.append({"job_id": job.id, "domain": site.domain, "job_type": job.job_type})
     return {"enqueued": len(jobs), "jobs": jobs}
+
+
+@shared_task
+def run_pipeline_domain(domain: str) -> dict[str, object]:
+    stages: list[dict[str, object]] = []
+    for job_type in (
+        ScrapeJob.JobType.SEED,
+        ScrapeJob.JobType.EXTRACT,
+        ScrapeJob.JobType.IMPORT_ARTICLES,
+    ):
+        job = _create_job(job_type, domain)
+        stage_result = run_scrape_job(job.id)
+        stages.append(
+            {
+                "job_id": job.id,
+                "job_type": job_type,
+                "result": stage_result,
+            }
+        )
+
+    return {"domain": domain, "stages": stages}
 
 
 @shared_task

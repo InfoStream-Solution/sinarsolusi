@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_celery_beat",
     "rest_framework",
+    "news_admin.apps.dashboard.apps.DashboardConfig",
     "news_admin.apps.jobs.apps.JobsConfig",
     "news_admin.apps.sources.apps.SourcesConfig",
     "news_admin.apps.articles.apps.ArticlesConfig",
