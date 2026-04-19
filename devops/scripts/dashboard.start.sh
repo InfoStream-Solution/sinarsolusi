@@ -13,6 +13,8 @@ if [[ "${ENV_FILE}" == "/etc/sinarsolusi/dashboard.env" && ! -f "${ENV_FILE}" ]]
   exit 1
 fi
 
+docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+
 docker run -d \
   --name "${CONTAINER_NAME}" \
   --restart unless-stopped \
