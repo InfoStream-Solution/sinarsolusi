@@ -84,6 +84,7 @@ def test_domain_action_queues_pipeline(monkeypatch) -> None:
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", SERVICE_TOKEN)
     monkeypatch.setattr(api_views, "get_enabled_domains", lambda: ["kompas.com"])
     monkeypatch.setattr(
         api_views,
@@ -152,13 +153,14 @@ def test_domain_action_accepts_valid_service_token(monkeypatch) -> None:
     }
 
 
-def test_create_seed_job_rejects_empty_domain() -> None:
+def test_create_seed_job_rejects_empty_domain(monkeypatch) -> None:
     request = RequestFactory().post(
         "/api/dashboard/jobs/seed/",
         data=json.dumps({"domain": ""}),
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", SERVICE_TOKEN)
 
     response = api_views.create_seed_job(request)
 
@@ -232,6 +234,7 @@ def test_create_seed_job_queues_background_job(monkeypatch) -> None:
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Bearer {SERVICE_TOKEN}",
     )
+    monkeypatch.setattr(api_views.settings, "SCRAPER_SERVICE_TOKEN", SERVICE_TOKEN)
     created_job = SimpleNamespace(
         id=7,
         job_type=ScrapeJob.JobType.SEED,
