@@ -3,5 +3,5 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-"${SCRIPT_DIR}/dashboard.stop.sh"
-"${SCRIPT_DIR}/dashboard.start.sh"
+bash "${SCRIPT_DIR}/dashboard.stop.sh" >/dev/null 2>&1 || true
+bash "${SCRIPT_DIR}/dashboard.start.sh"
