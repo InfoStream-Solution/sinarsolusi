@@ -3,6 +3,7 @@ import { createSessionCookie } from "@/lib/session";
 import { getNextPath, readRequestBody } from "@/lib/http";
 import { getSessionCookieName } from "@/lib/session";
 import { getSessionMaxAgeSeconds } from "@/lib/session";
+import { isSecureRequest } from "@/lib/session";
 import { validateDashboardCredentials } from "@/lib/session";
 import { normalizeNextPath } from "@/lib/paths";
 import { toPublicUrl } from "@/lib/public-url";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     value: sessionValue,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureRequest(request),
     path: "/",
     maxAge: getSessionMaxAgeSeconds(),
   });

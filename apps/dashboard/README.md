@@ -61,6 +61,21 @@ To run it with Docker Compose:
 docker compose -f devops/runtime/dashboard.compose.yaml up -d --build
 ```
 
+Or use the helper script:
+
+```bash
+devops/scripts/dashboard.start.sh
+```
+
+Related helpers:
+
+```bash
+devops/scripts/dashboard.pull_image.sh
+devops/scripts/dashboard.stop.sh
+devops/scripts/dashboard.logs.sh
+devops/scripts/dashboard.restart.sh
+```
+
 ## Scripts
 
 - `npm run dev` - Start Next.js with Turbopack
